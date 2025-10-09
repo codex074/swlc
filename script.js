@@ -48,9 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
             )
         };
 
+        // Calculate total weekly dose
         const totalWeeklyDose = schedule.dailyDoses.reduce((sum, dose) => sum + dose, 0);
 
         const speechText = generateSpeechTextFromSchedule(schedule);
+        // For display, we need to remove SSML tags
         const displayText = speechText.replace(/<[^>]*>/g, " ").replace(/\s+/g, ' ').trim();
 
         const requiredCss = `body{font-family:'Sarabun',sans-serif}.pill{width:28px;height:28px;border-radius:50%;display:inline-block;margin:2px;position:relative;border:1px solid #000;box-shadow:inset 0 1px 1px rgba(255,255,255,.5)}.pill-half-left{clip-path:polygon(0 0,50% 0,50% 100%,0 100%)}.pill-quarter-left{clip-path:polygon(50% 50%,50% 0,0 0,0 50%)}.pill-1mg{background-color:#fff}.pill-2mg{background-color:#ff8c42}.pill-3mg{background-color:#5bc0f8}.pill-4mg{background-color:#fcd34d}.pill-5mg{background-color:#f687b3}.day-card-header-0{background-color:#dc2626}.day-card-header-1{background-color:#f59e0b}.day-card-header-2{background-color:#ec4899}.day-card-header-3{background-color:#22c55e}.day-card-header-4{background-color:#ea580c}.day-card-header-5{background-color:#3b82f6}.day-card-header-6{background-color:#8b5cf6}`;
@@ -577,13 +579,19 @@ async function playTextWithGoogleTTS(text, buttonElement) {
 function generateSpeechTextFromSchedule(schedule) {
     let speechText = '';
     const medicationGroups = {};
+
+    // รวบรวมข้อมูลยาสำหรับวันที่ต้องทานยาเท่านั้น
     (schedule.combos || []).forEach((combo, dayIndex) => {
-        (combo || []).forEach(pill => {
-            const key = `${pill.mg}-${pill.half}-${pill.quarter}-${pill.count}`;
-            if (!medicationGroups[key]) medicationGroups[key] = { ...pill, days: [] };
-            medicationGroups[key].days.push(dayIndex);
-        });
+        if (schedule.dailyDoses[dayIndex] && schedule.dailyDoses[dayIndex] > 0.01) {
+            (combo || []).forEach(pill => {
+                const key = `${pill.mg}-${pill.half}-${pill.quarter}-${pill.count}`;
+                if (!medicationGroups[key]) medicationGroups[key] = { ...pill, days: [] };
+                medicationGroups[key].days.push(dayIndex);
+            });
+        }
     });
+
+    // สร้างประโยคสำหรับวันทียา
     Object.values(medicationGroups).sort((a,b) => b.mg - a.mg).forEach(instr => {
         const { mg, half, quarter, count, days: instrDays } = instr;
         const pillText = quarter ? 'หนึ่งส่วนสี่เม็ด' : (half ? 'ครึ่งเม็ด' : `${count} เม็ด`);
@@ -592,6 +600,27 @@ function generateSpeechTextFromSchedule(schedule) {
         const line = freq === 7 ? `ยาขนาด ${mg} มิลลิกรัม ${getPillColorName(mg)} กิน ${pillText} ทุกวัน` : `ยาขนาด ${mg} มิลลิกรัม ${getPillColorName(mg)} กิน ${pillText} สัปดาห์ละ ${freq} ครั้ง เฉพาะ ${dayText}`;
         speechText += line + '. <break time="700ms"/> ';
     });
+
+    // ================== NEW CODE START ==================
+    // ค้นหาและประกาศวันหยุดยา
+    const stopDays = [];
+    schedule.dailyDoses.forEach((dose, dayIndex) => {
+        if (!dose || dose < 0.01) {
+            stopDays.push(dayIndex);
+        }
+    });
+
+    if (stopDays.length > 0) {
+        const stopDayText = formatDayGroups(groupConsecutiveDays(stopDays));
+        // หากไม่มีการทานยาเลย ให้ขึ้นต้นด้วย "หยุดยา"
+        if (Object.keys(medicationGroups).length === 0) {
+            speechText += `หยุดยา ${stopDayText}. <break time="700ms"/> `;
+        } else { // หากมีการทานยาด้วย ให้ใช้คำว่า "และหยุดยา"
+            speechText += `และหยุดยา ${stopDayText}. <break time="700ms"/> `;
+        }
+    }
+    // ==================  NEW CODE END  ==================
+
     return `<speak>${speechText}</speak>`;
 }
 
@@ -789,7 +818,6 @@ function toggleWeeks() {
     updateInstructionsOnDateChange();
 }
 
-// ================== BUG FIX: Replaced function ==================
 function updateInstructionsOnDateChange() {
     const isManualMode = !document.getElementById('manual-mode-container').classList.contains('hidden');
     if (isManualMode) {
@@ -812,7 +840,6 @@ function updateInstructionsOnDateChange() {
         });
     }
 }
-// ================== END BUG FIX ==================
 
 function selectOption(optionIndex) {
     if (selectedOption >= 0) {
@@ -874,6 +901,24 @@ function printContent(elementToPrint, title, subtitle) {
     elementToPrint.querySelectorAll('.no-print').forEach(el => el.remove());
     elementToPrint.querySelector('h4')?.remove();
     printDiv.appendChild(elementToPrint);
+
+    // === ADDED: INSTRUCTIONS FOR PRINTING START ===
+    const instructionsHtml = `
+        <div style="text-align: left; font-size: 11px; margin-top: 16px; padding-top: 12px; border-top: 1px dashed #999;">
+            <h5 style="font-weight: bold; margin-bottom: 6px; font-size: 12px;">คำแนะนำเพิ่มเติม:</h5>
+            <ol style="list-style-type: decimal; padding-left: 20px; margin: 0;">
+                <li style="margin-bottom: 4px;">ควรรับประทานยาอย่างต่อเนื่อง เวลาเดียวกันทุกวัน เช่น ก่อนนอน หากลืมทานไม่เกิน 12 ชั่วโมง ให้รับประทานทันทีที่นึกได้ ถ้าเกินแล้วให้ข้ามไปมื้อถัดไปได้เลย โดยไม่ต้องเพิ่มยา</li>
+                <li style="margin-bottom: 4px;">ห้ามหยุดยาเอง และหากต้องเข้ารับการรักษาในที่อื่น หรือซื้อยาจากร้านยา ให้แจ้งทุกครั้งว่าท่านใช้ทานยาวาร์ฟารินอยู่</li>
+                <li style="margin-bottom: 4px;">ยาบางชนิด เช่น ยาแก้ปวด ยาฆ่าเชื้อ สมุนไพร อาหารเสริม บางชนิด อาจส่งผลต่อระดับยาในเลือดได้ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ทุกครั้ง</li>
+                <li>หากมีอาการเลือดออกผิดปกติ เช่น ฟกช้ำโดยไม่ทราบสาเหตุ เลือดกำเดาไหลไม่หยุด อุจจาระสีดำ อาเจียนเป็นเลือด ให้รีบมาพบแพทย์ทันที</li>
+            </ol>
+        </div>
+    `;
+    const instructionsDiv = document.createElement('div');
+    instructionsDiv.innerHTML = instructionsHtml;
+    printDiv.appendChild(instructionsDiv);
+    // === ADDED: INSTRUCTIONS FOR PRINTING END ===
+
     document.body.appendChild(printDiv);
     window.print();
     setTimeout(() => {
