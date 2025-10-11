@@ -1,6 +1,6 @@
 {
   "short_name": "Warfarin",
-  "name": "Warfarin Laveling and Calculation",
+  "name": "Warfarin Labeling and Calculation",
   "icons": [
     {
       "src": "android-chrome-192x192.png",
@@ -18,3 +18,4 @@
   "theme_color": "#3b82f6",
   "background_color": "#ffffff"
 }
+
