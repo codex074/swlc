@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warfarin labeling and calculation</title>
+    <title>Smart Warfarin Lebeling and Calculation</title>
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     
     <link rel="icon" type="image/png" href="android-chrome-192x192.png">
@@ -132,7 +132,7 @@
     <div id="main-content" class="container mx-auto px-4 py-6 max-w-6xl">
         
         <div class="relative mb-8 pt-2">
-            <div class="absolute top-0 left-0 no-print">
+            <div class="absolute top-0 left-0 flex gap-2 no-print">
                 <button onclick="toggleSidebar()" class="bg-gray-500 text-white px-3 py-2 rounded-md hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm shadow-md">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -140,12 +140,17 @@
                     <span class="hidden sm:inline">ตั้งค่า</span>
                     <span class="sm:hidden">ตั้งค่า</span>
                 </button>
+                <a href="https://drive.google.com/file/d/13Vj0PVAaMya_lP29xfATQR6IL2A8tMZE/view?usp=drive_link" target="_blank" class="bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm shadow-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    <span class="hidden sm:inline">คู่มือการใช้งาน</span>
+                    <span class="sm:hidden">คู่มือ</span>
+                </a>
             </div>
     
             <div class="text-center">
                 <img src="hospital_logo.png" alt="โลโก้โรงพยาบาล" id="hospital-logo" class="h-28 object-contain inline-block mb-4">
                 <h1 class="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
-                    Smart Warfarin Labeling and Calculation 
+                    คำนวณขนาดยา Warfarin
                 </h1>
             </div>
         </div>
@@ -182,12 +187,12 @@
                     </div>
                 </div>
                 
-                <div id="changeIndicator" class="hidden mt-4 p-4 bg-gray-50 rounded-lg text-center">
+                <div id="changeIndicator" class="mt-4 p-4 bg-gray-50 rounded-lg text-center">
                     <div id="changeText" class="text-2xl font-semibold"></div>
                 </div>
             </div>
             
-            <div id="adjustmentButtons" class="section-card rounded-lg shadow-md p-6 mb-6 hidden no-print">
+            <div id="adjustmentButtons" class="section-card rounded-lg shadow-md p-6 mb-6 no-print">
                 <h3 class="text-lg font-semibold mb-4 text-gray-800">ปรับขนาดยาอัตโนมัติ</h3>
                 <div class="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-2">
                     <button onclick="adjustDose(-25)" class="px-3 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 text-sm">-25%</button>
@@ -272,7 +277,6 @@
     <div id="pill-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[100] hidden items-center justify-center p-4 no-print">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm overflow-hidden">
             <div id="modal-color-bar" class="h-2 w-full"></div>
-            
             <div class="p-6">
                 <h3 class="text-xl font-semibold mb-4 text-center" id="modal-title">เพิ่มยา</h3>
                 <form id="pill-modal-form">
@@ -328,6 +332,4 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <script src="script.js"></script>
 </body>
-
 </html>
-
