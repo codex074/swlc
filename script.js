@@ -5,8 +5,7 @@ const dayHeaderColors = ['bg-red-600', 'bg-yellow-500', 'bg-pink-600', 'bg-green
 
 // ===== ★★★★★ สำคัญ: แก้ไข URL ตรงนี้ ★★★★★ =====
 // ให้ใส่ URL ของเว็บแอปบน GitHub Pages ของคุณตรงนี้
-// ตัวอย่าง: const PUBLIC_BASE_URL = 'https://your-username.github.io/your-repo-name/';
-const PUBLIC_BASE_URL = 'https://codex074.github.io/wfr';
+const PUBLIC_BASE_URL = 'https://codex074.github.io/swlc/';
 // =======================================================
 
 // State for Auto Mode
@@ -123,6 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             selectStrength(strength);
         }
     });
+
+    document.getElementById('previousDose').addEventListener('input', function() {
+        document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
+    });
+    ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
 });
 
 function switchMode(mode) {
@@ -403,6 +407,7 @@ function clearInputs() {
 
 function hideResults() {
     document.getElementById('results').classList.add('hidden');
+    document.getElementById('changeIndicator').classList.add('hidden');
     selectedOption = -1;
     allCalculatedOptions = [];
     displayedOptionsCount = 0;
@@ -428,20 +433,21 @@ function showChangeIndicator() {
     const indicator = document.getElementById('changeIndicator');
     const changeText = document.getElementById('changeText');
     
-    indicator.classList.remove('hidden');
-
     if (previousDose === 0 && newDose > 0) {
+        indicator.classList.remove('hidden');
         changeText.innerHTML = `<div class="text-gray-600"><div class="text-3xl font-bold">ขนาดยาใหม่</div><div class="text-lg">${newDose.toFixed(1)} mg/wk</div></div>`;
         return;
     }
     
     if (previousDose === 0) {
+        indicator.classList.add('hidden');
         changeText.innerHTML = '';
         return;
     }
 
     const changePercent = ((newDose - previousDose) / previousDose) * 100;
     const changeMg = newDose - previousDose;
+    indicator.classList.remove('hidden');
 
     if (Math.abs(changePercent) < 0.1) {
         changeText.innerHTML = `<div class="text-blue-600"><div class="text-3xl font-bold">คงที่ (0.0%)</div><div class="text-lg">${previousDose.toFixed(1)} → ${newDose.toFixed(1)} mg/wk</div></div>`;
@@ -988,7 +994,9 @@ function updatePrintButtonVisibility() {
     document.getElementById('printBtnAuto').classList.toggle('hidden', selectedOption < 0);
 }
 
-document.getElementById('previousDose').addEventListener('input', showChangeIndicator);
+document.getElementById('previousDose').addEventListener('input', function() {
+    document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
+});
 ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
