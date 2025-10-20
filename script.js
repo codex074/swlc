@@ -5,6 +5,7 @@ const dayHeaderColors = ['bg-red-600', 'bg-yellow-500', 'bg-pink-600', 'bg-green
 
 // ===== ★★★★★ สำคัญ: แก้ไข URL ตรงนี้ ★★★★★ =====
 // ให้ใส่ URL ของเว็บแอปบน GitHub Pages ของคุณตรงนี้
+// ตัวอย่าง: const PUBLIC_BASE_URL = 'https://your-username.github.io/your-repo-name/';
 const PUBLIC_BASE_URL = 'https://codex074.github.io/swlc/';
 // =======================================================
 
@@ -122,11 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
             selectStrength(strength);
         }
     });
-
-    document.getElementById('previousDose').addEventListener('input', function() {
-        document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
-    });
-    ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
 });
 
 function switchMode(mode) {
@@ -407,7 +403,6 @@ function clearInputs() {
 
 function hideResults() {
     document.getElementById('results').classList.add('hidden');
-    document.getElementById('changeIndicator').classList.add('hidden');
     selectedOption = -1;
     allCalculatedOptions = [];
     displayedOptionsCount = 0;
@@ -433,21 +428,20 @@ function showChangeIndicator() {
     const indicator = document.getElementById('changeIndicator');
     const changeText = document.getElementById('changeText');
     
+    indicator.classList.remove('hidden');
+
     if (previousDose === 0 && newDose > 0) {
-        indicator.classList.remove('hidden');
         changeText.innerHTML = `<div class="text-gray-600"><div class="text-3xl font-bold">ขนาดยาใหม่</div><div class="text-lg">${newDose.toFixed(1)} mg/wk</div></div>`;
         return;
     }
     
     if (previousDose === 0) {
-        indicator.classList.add('hidden');
         changeText.innerHTML = '';
         return;
     }
 
     const changePercent = ((newDose - previousDose) / previousDose) * 100;
     const changeMg = newDose - previousDose;
-    indicator.classList.remove('hidden');
 
     if (Math.abs(changePercent) < 0.1) {
         changeText.innerHTML = `<div class="text-blue-600"><div class="text-3xl font-bold">คงที่ (0.0%)</div><div class="text-lg">${previousDose.toFixed(1)} → ${newDose.toFixed(1)} mg/wk</div></div>`;
@@ -458,10 +452,13 @@ function showChangeIndicator() {
     }
 }
 
+// ========== CORRECTED FUNCTION ==========
 function findComb(target, availablePills, allowHalf, allowQuarter, minPillObjects = 1, maxPillObjects = 4) {
     if (Math.abs(target) < FLOAT_TOLERANCE) return [[]];
     const combinations = [];
+
     function backtrack(remaining, currentCombo, pillIndex, objectCount) {
+        // Base case: A valid combination is found.
         if (Math.abs(remaining) < FLOAT_TOLERANCE) {
             if (objectCount >= minPillObjects) {
                 const aggregated = aggregateCombo(currentCombo);
@@ -469,37 +466,82 @@ function findComb(target, availablePills, allowHalf, allowQuarter, minPillObject
             }
             return;
         }
-        if (pillIndex >= availablePills.length || objectCount >= maxPillObjects || remaining < -FLOAT_TOLERANCE) return;
+
+        // Base case: This path is not viable (ran out of pills, too many objects, or overshot target).
+        if (pillIndex >= availablePills.length || objectCount >= maxPillObjects || remaining < -FLOAT_TOLERANCE) {
+            return;
+        }
+
         const pillMg = availablePills[pillIndex];
+
+        // --- STRATEGY 1: Skip this pill strength entirely and move to the next.
+        backtrack(remaining, currentCombo, pillIndex + 1, objectCount);
+
+        // --- STRATEGY 2: Use the current pill strength in various combinations. ---
+
+        // Loop through using 1 to max full pills.
         const maxFullPills = Math.min(3, Math.floor((remaining + FLOAT_TOLERANCE) / pillMg));
         for (let count = 1; count <= maxFullPills; count++) {
-            if (objectCount + count <= maxPillObjects) {
-                currentCombo.push({ mg: pillMg, half: false, quarter: false, count: count });
-                backtrack(remaining - pillMg * count, currentCombo, pillIndex + 1, objectCount + count);
-                currentCombo.pop();
+            if (objectCount + count > maxPillObjects) continue;
+
+            const remainingAfterFull = remaining - (pillMg * count);
+            
+            // Add the full pills to the current combination for this recursive path.
+            currentCombo.push({ mg: pillMg, half: false, quarter: false, count: count });
+            
+            // Path A: Use ONLY these full pills, then recurse to the NEXT pill strength.
+            backtrack(remainingAfterFull, currentCombo, pillIndex + 1, objectCount + count);
+
+            // Path B: Add a HALF pill of the SAME strength, then recurse to the NEXT.
+            if (allowHalf && objectCount + count + 1 <= maxPillObjects) {
+                const halfDose = pillMg / 2;
+                if (remainingAfterFull >= halfDose - FLOAT_TOLERANCE) {
+                    currentCombo.push({ mg: pillMg, half: true, quarter: false, count: 1 });
+                    backtrack(remainingAfterFull - halfDose, currentCombo, pillIndex + 1, objectCount + count + 1);
+                    currentCombo.pop(); // Backtrack: remove the half pill.
+                }
             }
+            
+            // Path C: Add a QUARTER pill of the SAME strength, then recurse to the NEXT.
+            if (allowQuarter && objectCount + count + 1 <= maxPillObjects) {
+                const quarterDose = pillMg / 4;
+                if (remainingAfterFull >= quarterDose - FLOAT_TOLERANCE) {
+                    currentCombo.push({ mg: pillMg, half: false, quarter: true, count: 1 });
+                    backtrack(remainingAfterFull - quarterDose, currentCombo, pillIndex + 1, objectCount + count + 1);
+                    currentCombo.pop(); // Backtrack: remove the quarter pill.
+                }
+            }
+
+            currentCombo.pop(); // Backtrack: remove the full pills for the next loop iteration.
         }
-        if (allowHalf && objectCount < maxPillObjects) {
+
+        // --- STRATEGY 3: Use ONLY fractions of this pill strength (no full pills). ---
+
+        // Path D: Use just a single HALF pill, then recurse to the NEXT strength.
+        if (allowHalf && objectCount + 1 <= maxPillObjects) {
             const halfDose = pillMg / 2;
-            if (remaining >= halfDose - FLOAT_TOLERANCE && !currentCombo.some(p => p.mg === pillMg && p.half)) {
+            if (remaining >= halfDose - FLOAT_TOLERANCE) {
                 currentCombo.push({ mg: pillMg, half: true, quarter: false, count: 1 });
                 backtrack(remaining - halfDose, currentCombo, pillIndex + 1, objectCount + 1);
-                currentCombo.pop();
+                currentCombo.pop(); // Backtrack: remove the half pill.
             }
         }
-        if (allowQuarter && objectCount < maxPillObjects) {
+
+        // Path E: Use just a single QUARTER pill, then recurse to the NEXT strength.
+        if (allowQuarter && objectCount + 1 <= maxPillObjects) {
             const quarterDose = pillMg / 4;
-            if (remaining >= quarterDose - FLOAT_TOLERANCE && !currentCombo.some(p => p.mg === pillMg && p.quarter)) {
+            if (remaining >= quarterDose - FLOAT_TOLERANCE) {
                 currentCombo.push({ mg: pillMg, half: false, quarter: true, count: 1 });
                 backtrack(remaining - quarterDose, currentCombo, pillIndex + 1, objectCount + 1);
-                currentCombo.pop();
+                currentCombo.pop(); // Backtrack: remove the quarter pill.
             }
         }
-        backtrack(remaining, currentCombo, pillIndex + 1, objectCount);
     }
+
     backtrack(target, [], 0, 0);
     return filterAndOptimizeCombinations(combinations);
 }
+// ==========================================
 
 function aggregateCombo(combo) {
     if (!combo) return [];
@@ -994,9 +1036,7 @@ function updatePrintButtonVisibility() {
     document.getElementById('printBtnAuto').classList.toggle('hidden', selectedOption < 0);
 }
 
-document.getElementById('previousDose').addEventListener('input', function() {
-    document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
-});
+document.getElementById('previousDose').addEventListener('input', showChangeIndicator);
 ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
