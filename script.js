@@ -5,7 +5,6 @@ const dayHeaderColors = ['bg-red-600', 'bg-yellow-500', 'bg-pink-600', 'bg-green
 
 // ===== ★★★★★ สำคัญ: แก้ไข URL ตรงนี้ ★★★★★ =====
 // ให้ใส่ URL ของเว็บแอปบน GitHub Pages ของคุณตรงนี้
-// ตัวอย่าง: const PUBLIC_BASE_URL = 'https://your-username.github.io/your-repo-name/';
 const PUBLIC_BASE_URL = 'https://codex074.github.io/swlc/';
 // =======================================================
 
@@ -123,6 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             selectStrength(strength);
         }
     });
+
+    document.getElementById('previousDose').addEventListener('input', function() {
+        document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
+    });
+    ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
 });
 
 function switchMode(mode) {
@@ -403,6 +407,7 @@ function clearInputs() {
 
 function hideResults() {
     document.getElementById('results').classList.add('hidden');
+    document.getElementById('changeIndicator').classList.add('hidden');
     selectedOption = -1;
     allCalculatedOptions = [];
     displayedOptionsCount = 0;
@@ -428,20 +433,21 @@ function showChangeIndicator() {
     const indicator = document.getElementById('changeIndicator');
     const changeText = document.getElementById('changeText');
     
-    indicator.classList.remove('hidden');
-
     if (previousDose === 0 && newDose > 0) {
+        indicator.classList.remove('hidden');
         changeText.innerHTML = `<div class="text-gray-600"><div class="text-3xl font-bold">ขนาดยาใหม่</div><div class="text-lg">${newDose.toFixed(1)} mg/wk</div></div>`;
         return;
     }
     
     if (previousDose === 0) {
+        indicator.classList.add('hidden');
         changeText.innerHTML = '';
         return;
     }
 
     const changePercent = ((newDose - previousDose) / previousDose) * 100;
     const changeMg = newDose - previousDose;
+    indicator.classList.remove('hidden');
 
     if (Math.abs(changePercent) < 0.1) {
         changeText.innerHTML = `<div class="text-blue-600"><div class="text-3xl font-bold">คงที่ (0.0%)</div><div class="text-lg">${previousDose.toFixed(1)} → ${newDose.toFixed(1)} mg/wk</div></div>`;
@@ -452,13 +458,10 @@ function showChangeIndicator() {
     }
 }
 
-// ========== CORRECTED FUNCTION ==========
 function findComb(target, availablePills, allowHalf, allowQuarter, minPillObjects = 1, maxPillObjects = 4) {
     if (Math.abs(target) < FLOAT_TOLERANCE) return [[]];
     const combinations = [];
-
     function backtrack(remaining, currentCombo, pillIndex, objectCount) {
-        // Base case: A valid combination is found.
         if (Math.abs(remaining) < FLOAT_TOLERANCE) {
             if (objectCount >= minPillObjects) {
                 const aggregated = aggregateCombo(currentCombo);
@@ -466,82 +469,53 @@ function findComb(target, availablePills, allowHalf, allowQuarter, minPillObject
             }
             return;
         }
-
-        // Base case: This path is not viable (ran out of pills, too many objects, or overshot target).
-        if (pillIndex >= availablePills.length || objectCount >= maxPillObjects || remaining < -FLOAT_TOLERANCE) {
-            return;
-        }
-
+        if (pillIndex >= availablePills.length || objectCount >= maxPillObjects || remaining < -FLOAT_TOLERANCE) return;
         const pillMg = availablePills[pillIndex];
-
-        // --- STRATEGY 1: Skip this pill strength entirely and move to the next.
-        backtrack(remaining, currentCombo, pillIndex + 1, objectCount);
-
-        // --- STRATEGY 2: Use the current pill strength in various combinations. ---
-
-        // Loop through using 1 to max full pills.
         const maxFullPills = Math.min(3, Math.floor((remaining + FLOAT_TOLERANCE) / pillMg));
         for (let count = 1; count <= maxFullPills; count++) {
             if (objectCount + count > maxPillObjects) continue;
-
             const remainingAfterFull = remaining - (pillMg * count);
-            
-            // Add the full pills to the current combination for this recursive path.
             currentCombo.push({ mg: pillMg, half: false, quarter: false, count: count });
-            
-            // Path A: Use ONLY these full pills, then recurse to the NEXT pill strength.
             backtrack(remainingAfterFull, currentCombo, pillIndex + 1, objectCount + count);
-
-            // Path B: Add a HALF pill of the SAME strength, then recurse to the NEXT.
             if (allowHalf && objectCount + count + 1 <= maxPillObjects) {
                 const halfDose = pillMg / 2;
                 if (remainingAfterFull >= halfDose - FLOAT_TOLERANCE) {
                     currentCombo.push({ mg: pillMg, half: true, quarter: false, count: 1 });
                     backtrack(remainingAfterFull - halfDose, currentCombo, pillIndex + 1, objectCount + count + 1);
-                    currentCombo.pop(); // Backtrack: remove the half pill.
+                    currentCombo.pop();
                 }
             }
-            
-            // Path C: Add a QUARTER pill of the SAME strength, then recurse to the NEXT.
             if (allowQuarter && objectCount + count + 1 <= maxPillObjects) {
                 const quarterDose = pillMg / 4;
                 if (remainingAfterFull >= quarterDose - FLOAT_TOLERANCE) {
                     currentCombo.push({ mg: pillMg, half: false, quarter: true, count: 1 });
                     backtrack(remainingAfterFull - quarterDose, currentCombo, pillIndex + 1, objectCount + count + 1);
-                    currentCombo.pop(); // Backtrack: remove the quarter pill.
+                    currentCombo.pop();
                 }
             }
-
-            currentCombo.pop(); // Backtrack: remove the full pills for the next loop iteration.
+            currentCombo.pop();
         }
-
-        // --- STRATEGY 3: Use ONLY fractions of this pill strength (no full pills). ---
-
-        // Path D: Use just a single HALF pill, then recurse to the NEXT strength.
         if (allowHalf && objectCount + 1 <= maxPillObjects) {
             const halfDose = pillMg / 2;
             if (remaining >= halfDose - FLOAT_TOLERANCE) {
                 currentCombo.push({ mg: pillMg, half: true, quarter: false, count: 1 });
                 backtrack(remaining - halfDose, currentCombo, pillIndex + 1, objectCount + 1);
-                currentCombo.pop(); // Backtrack: remove the half pill.
+                currentCombo.pop();
             }
         }
-
-        // Path E: Use just a single QUARTER pill, then recurse to the NEXT strength.
         if (allowQuarter && objectCount + 1 <= maxPillObjects) {
             const quarterDose = pillMg / 4;
             if (remaining >= quarterDose - FLOAT_TOLERANCE) {
                 currentCombo.push({ mg: pillMg, half: false, quarter: true, count: 1 });
                 backtrack(remaining - quarterDose, currentCombo, pillIndex + 1, objectCount + 1);
-                currentCombo.pop(); // Backtrack: remove the quarter pill.
+                currentCombo.pop();
             }
         }
+        backtrack(remaining, currentCombo, pillIndex + 1, objectCount);
     }
-
     backtrack(target, [], 0, 0);
     return filterAndOptimizeCombinations(combinations);
 }
-// ==========================================
 
 function aggregateCombo(combo) {
     if (!combo) return [];
@@ -603,7 +577,33 @@ function generateOptions() {
             }
         }
     }
-    options.sort((a, b) => (countHalfPillTypes(a.combos) - countHalfPillTypes(b.combos)) || (a.type === 'uniform' ? -1 : 1) - (b.type === 'uniform' ? -1 : 1) || (a.complexity - b.complexity) || (countPillTypes(a.combos) - countPillTypes(b.combos)) || (countTotalObjects(a.combos) - countTotalObjects(b.combos)));
+    
+    options.forEach(opt => {
+        opt.doseVariance = calculateDoseVariance(opt.dailyDoses);
+        opt.totalSplits = countTotalSplitPills(opt.combos);
+        opt.uniqueMethods = countUniqueMethods(opt.combos);
+    });
+
+    options.sort((a, b) => {
+        const aIsSimple = a.uniqueMethods <= 2;
+        const bIsSimple = b.uniqueMethods <= 2;
+        if (aIsSimple !== bIsSimple) return aIsSimple ? -1 : 1;
+        const aHasSplits = a.totalSplits > 0;
+        const bHasSplits = b.totalSplits > 0;
+        if (aHasSplits !== bHasSplits) return aHasSplits ? 1 : -1;
+        const varianceDiff = a.doseVariance - b.doseVariance;
+        if (Math.abs(varianceDiff) > 0.001) return varianceDiff;
+        const splitCountDiff = a.totalSplits - b.totalSplits;
+        if (splitCountDiff !== 0) return splitCountDiff;
+        const methodCountDiff = a.uniqueMethods - b.uniqueMethods;
+        if (methodCountDiff !== 0) return methodCountDiff;
+        const complexityDiff = a.complexity - b.complexity;
+        if (complexityDiff !== 0) return complexityDiff;
+        const pillTypesDiff = countPillTypes(a.combos) - countPillTypes(b.combos);
+        if (pillTypesDiff !== 0) return pillTypesDiff;
+        return countTotalObjects(a.combos) - countTotalObjects(b.combos);
+    });
+
     allCalculatedOptions = options; displayedOptionsCount = 0; container.innerHTML = ''; showMoreContainer.innerHTML = '';
     if (allCalculatedOptions.length > 0) {
         container.innerHTML = `<div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg no-print"><div class="text-blue-800 font-medium">พบตัวเลือกทั้งหมด ${allCalculatedOptions.length} แบบ</div></div>`;
@@ -633,10 +633,6 @@ function createOptionKey(combos) {
     return combos.map(c => c.length === 0 ? 's' : c.map(p => `${p.mg}${p.half ? 'h' : p.quarter ? 'q' : 'f'}x${p.count}`).sort().join(',')).join('|');
 }
 
-function countHalfPillTypes(combos) {
-    const halfTypes = new Set(); combos.flat().forEach(p => { if (p.half || p.quarter) halfTypes.add(p.mg); }); return halfTypes.size;
-}
-
 function createNonUniformOption(baseDose, specialDose, normalCombo, specialCombo, skipDays, specialDays, pattern) {
     const dailyDoses = new Array(7).fill(0), combos = new Array(7).fill([]);
     const specialDaysRef = (pattern === 'weekend') ? [0, 6, 5] : [5, 3, 1];
@@ -646,6 +642,37 @@ function createNonUniformOption(baseDose, specialDose, normalCombo, specialCombo
         if (specialIndices.includes(i)) { dailyDoses[i] = specialDose; combos[i] = specialCombo; } else { dailyDoses[i] = baseDose; combos[i] = normalCombo; }
     }
     return { type: 'non-uniform', dailyDoses, combos, complexity: skipDays + specialDays };
+}
+
+function countUniqueMethods(combos) {
+    const methodKeys = new Set();
+    combos.forEach(combo => {
+        if (!combo || combo.length === 0) {
+            methodKeys.add('stop');
+        } else {
+            const key = combo
+                .map(p => `${p.mg}${p.quarter ? 'q' : p.half ? 'h' : 'f'}x${p.count}`)
+                .sort()
+                .join('|');
+            methodKeys.add(key);
+        }
+    });
+    return methodKeys.size;
+}
+
+function calculateDoseVariance(dailyDoses) {
+    if (!dailyDoses || dailyDoses.length === 0) return 0;
+    const mean = dailyDoses.reduce((a, b) => a + b, 0) / dailyDoses.length;
+    return dailyDoses.reduce((sum, dose) => sum + Math.pow(dose - mean, 2), 0);
+}
+
+function countTotalSplitPills(combos) {
+    return combos.flat().reduce((sum, pill) => {
+        if (pill.half || pill.quarter) {
+            return sum + (pill.count || 0);
+        }
+        return sum;
+    }, 0);
 }
 
 function countPillTypes(combos) { return new Set(combos.flat().map(p => p.mg)).size; }
@@ -851,15 +878,34 @@ function getPillBgColor(mg) {
 }
 function groupConsecutiveDays(days) {
     if (days.length === 0) return [];
-    const sorted = [...days].sort((a, b) => a - b); const groups = []; let currentGroup = [sorted[0]];
-    for (let i = 1; i < sorted.length; i++) {
-        if (sorted[i] === sorted[i-1] + 1) { currentGroup.push(sorted[i]); }
-        else { groups.push(currentGroup); currentGroup = [sorted[i]]; }
+    
+    const sorted = [...days].sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
+
+    const groups = [];
+    if (sorted.length > 0) {
+        let currentGroup = [sorted[0]];
+        for (let i = 1; i < sorted.length; i++) {
+            const prev = currentGroup[currentGroup.length - 1];
+            const current = sorted[i];
+            
+            if ((current === 0 && prev === 6) || current === prev + 1) {
+                currentGroup.push(current);
+            } else {
+                groups.push(currentGroup);
+                currentGroup = [current];
+            }
+        }
+        groups.push(currentGroup);
     }
-    groups.push(currentGroup); return groups;
+    return groups;
 }
 function formatDayGroups(dayGroups) {
-    return dayGroups.map(group => group.length === 1 ? `วัน${fullThaiDays[group[0]]}` : `วัน${fullThaiDays[group[0]]} ถึง วัน${fullThaiDays[group[group.length - 1]]}`).join(', ');
+    return dayGroups.map(group => {
+        if (group.length === 1) {
+            return `วัน${fullThaiDays[group[0]]}`;
+        }
+        return `วัน${fullThaiDays[group[0]]} ถึง วัน${fullThaiDays[group[group.length - 1]]}`;
+    }).join(', ');
 }
 
 function doseToPillText(totalDose, mg) {
@@ -885,6 +931,7 @@ function doseToPillText(totalDose, mg) {
     return text || '0 เม็ด';
 }
 
+
 function generateMedicationInstructions(option) {
     let days = 7, periodText = '1 สัปดาห์';
     if (document.getElementById('useDateRange').checked) {
@@ -898,54 +945,79 @@ function generateMedicationInstructions(option) {
     }
 
     const medicationGroups = {};
+    const activeDays = new Set();
+
     (option.combos || []).forEach((combo, dayIndex) => {
-        (combo || []).forEach(pill => {
-            const key = `${pill.mg}-${pill.half}-${pill.quarter}-${pill.count}`;
-            if (!medicationGroups[key]) medicationGroups[key] = { ...pill, days: [] };
-            medicationGroups[key].days.push(dayIndex);
+        if (!combo || combo.length === 0) return;
+
+        const dailyTotalsByStrength = {};
+        combo.forEach(pill => {
+            const dose = (pill.half ? 0.5 : pill.quarter ? 0.25 : 1) * pill.count * pill.mg;
+            dailyTotalsByStrength[pill.mg] = (dailyTotalsByStrength[pill.mg] || 0) + dose;
+            activeDays.add(dayIndex);
+        });
+
+        Object.keys(dailyTotalsByStrength).forEach(strength => {
+            const totalDose = dailyTotalsByStrength[strength];
+            if (totalDose > 0.01) {
+                const doseKey = totalDose.toFixed(2);
+                if (!medicationGroups[strength]) medicationGroups[strength] = {};
+                if (!medicationGroups[strength][doseKey]) {
+                    medicationGroups[strength][doseKey] = {
+                        days: [],
+                        totalDailyDose: totalDose
+                    };
+                }
+                medicationGroups[strength][doseKey].days.push(dayIndex);
+            }
         });
     });
 
     let html = '<div><h6 class="font-medium mb-3">วิธีกินยา:</h6><div class="flex flex-col gap-2">';
-    if (Object.keys(medicationGroups).length === 0 && option.dailyDoses.every(d => d < 0.01)) {
+
+    if (Object.keys(medicationGroups).length === 0) {
         html += '<p class="text-gray-700 font-semibold">หยุดยาทุกวันตามคำสั่งแพทย์</p>';
     } else {
-        const finalInstructions = {};
-        Object.values(medicationGroups).forEach(instr => {
-            const key = `${instr.mg}-${instr.days.sort().join(',')}`;
-            if (!finalInstructions[key]) {
-                finalInstructions[key] = {
-                    mg: instr.mg,
-                    days: instr.days,
-                    totalDailyDose: 0,
-                    originalInstructions: []
-                };
-            }
-            finalInstructions[key].totalDailyDose += (instr.half ? 0.5 : instr.quarter ? 0.25 : 1) * instr.count * instr.mg;
-            finalInstructions[key].originalInstructions.push(instr);
-        });
+        const sortedStrengths = Object.keys(medicationGroups).sort((a, b) => b - a);
 
-        Object.values(finalInstructions).sort((a,b) => b.mg - a.mg).forEach(group => {
-            const { mg, days: instrDays, totalDailyDose, originalInstructions } = group;
-            const pillText = doseToPillText(totalDailyDose, mg);
-            const dayText = formatDayGroups(groupConsecutiveDays(instrDays));
-            const freq = instrDays.length;
-            const instructionLineForDisplay = freq === 7 ? `${mg} mg (<strong>${getPillColorName(mg)}</strong>) กิน <strong>${pillText}</strong> ทุกวัน` : `${mg} mg (<strong>${getPillColorName(mg)}</strong>) กิน <strong>${pillText}</strong> สัปดาห์ละ ${freq} ครั้ง เฉพาะ <strong>${dayText}</strong>`;
-            let totalPhysicalPillsNeeded = 0;
-            const startDateValue = document.getElementById('startDate').value;
-            const startDayOfWeek = startDateValue ? new Date(startDateValue).getDay() : new Date().getDay();
-            originalInstructions.forEach(instr => {
-                let totalInstances = 0;
-                for (let d = 0; d < days; d++) {
-                    if (instr.days.includes((startDayOfWeek + d) % 7)) totalInstances++;
-                }
-                totalPhysicalPillsNeeded += instr.quarter ? Math.ceil(totalInstances / 4) : (instr.half ? Math.ceil(totalInstances / 2) : totalInstances * instr.count);
+        sortedStrengths.forEach(strength => {
+            const mg = parseInt(strength);
+            const doseGroups = medicationGroups[strength];
+            const sortedDoseKeys = Object.keys(doseGroups).sort((a, b) => b - a);
+
+            sortedDoseKeys.forEach(doseKey => {
+                const group = doseGroups[doseKey];
+                const { days: instrDays, totalDailyDose } = group;
+
+                const pillText = doseToPillText(totalDailyDose, mg);
+                const dayText = formatDayGroups(groupConsecutiveDays(instrDays));
+                const freq = instrDays.length;
+
+                const instructionLineForDisplay = freq === 7
+                    ? `${mg} mg (<strong>${getPillColorName(mg)}</strong>) กิน <strong>${pillText}</strong> ทุกวัน`
+                    : `${mg} mg (<strong>${getPillColorName(mg)}</strong>) กิน <strong>${pillText}</strong> สัปดาห์ละ ${freq} ครั้ง เฉพาะ <strong>${dayText}</strong>`;
+
+                const numberOfWeeks = days / 7;
+                const totalPhysicalPillsNeeded = (totalDailyDose / mg) * freq * numberOfWeeks;
+                const pillCountText = totalPhysicalPillsNeeded > 0 ? `${Number(totalPhysicalPillsNeeded.toFixed(2))} เม็ด/${periodText}` : '';
+                
+                const representativePill = { mg: mg, count: 1, half: false, quarter: false };
+                const pillIconHtml = generatePillVisual([representativePill]);
+
+                html += `<div class="text-sm p-3 ${getPillBgColor(mg)} border rounded flex items-center"><div class="flex-shrink-0 w-10 flex justify-center items-center mr-3">${pillIconHtml}</div><div class="flex-grow flex justify-between items-center gap-2"><span class="flex-grow">${instructionLineForDisplay}</span><span class="text-xs text-gray-600 font-semibold flex-shrink-0 whitespace-nowrap">${pillCountText}</span></div></div>`;
             });
-            const pillCountText = totalPhysicalPillsNeeded > 0 ? `${totalPhysicalPillsNeeded} เม็ด/${periodText}` : '';
-            const singlePillIconInstr = { ...originalInstructions[0], count: 1 };
-            const pillIconHtml = generatePillVisual([singlePillIconInstr]);
-            html += `<div class="text-sm p-3 ${getPillBgColor(mg)} border rounded flex items-center"><div class="flex-shrink-0 w-10 flex justify-center items-center mr-3">${pillIconHtml}</div><div class="flex-grow flex justify-between items-center gap-2"><span class="flex-grow">${instructionLineForDisplay}</span><span class="text-xs text-gray-600 font-semibold flex-shrink-0 whitespace-nowrap">${pillCountText}</span></div></div>`;
         });
+    }
+    
+    const stopDays = [];
+    for (let i = 0; i < 7; i++) {
+        if (!activeDays.has(i)) {
+            stopDays.push(i);
+        }
+    }
+    if (stopDays.length > 0 && stopDays.length < 7) {
+         const stopDayText = formatDayGroups(groupConsecutiveDays(stopDays));
+         html += `<div class="text-sm p-3 bg-red-50 border-red-200 border rounded flex items-center"><div class="flex-shrink-0 w-10 flex justify-center items-center mr-3 text-2xl">🚫</div><div class="flex-grow flex justify-between items-center gap-2"><span class="flex-grow"><strong>หยุดยา</strong> ใน <strong>${stopDayText}</strong></span></div></div>`;
     }
 
     html += '</div></div>';
@@ -1036,7 +1108,9 @@ function updatePrintButtonVisibility() {
     document.getElementById('printBtnAuto').classList.toggle('hidden', selectedOption < 0);
 }
 
-document.getElementById('previousDose').addEventListener('input', showChangeIndicator);
+document.getElementById('previousDose').addEventListener('input', function() {
+    document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
+});
 ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
