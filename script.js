@@ -71,9 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="day-card-header-${dayIndex}" style="font-weight: bold; padding: 0.75rem 0; font-size: 1.125rem; color: white;">${thaiDays[dayIndex]}</div>
                     <div style="background-color: ${isDayOff ? '#f9fafb' : 'white'}; padding: 1rem; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                         ${isDayOff
-                            ? `<div style="font-size: 2.25rem; margin-bottom: 0.5rem;">🚫</div><div style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">หยุดยา</div>`
-                            : `<div style="font-size: 0.875rem; color: #374151; font-weight: 500; margin-bottom: 0.75rem;">${dose.toFixed(2)} mg</div><div>${(combo||[]).map(p=>Array(p.count||1).fill(`<span class="pill pill-${p.mg}mg ${p.quarter?'pill-quarter-left':p.half?'pill-half-left':''}"></span>`).join('')).join('')}</div>`
-                        }
+                    ? `<div style="font-size: 2.25rem; margin-bottom: 0.5rem;">🚫</div><div style="color: #dc2626; font-weight: bold; font-size: 0.875rem;">หยุดยา</div>`
+                    : `<div style="font-size: 0.875rem; color: #374151; font-weight: 500; margin-bottom: 0.75rem;">${dose.toFixed(2)} mg</div><div>${(combo || []).map(p => Array(p.count || 1).fill(`<span class="pill pill-${p.mg}mg ${p.quarter ? 'pill-quarter-left' : p.half ? 'pill-half-left' : ''}"></span>`).join('')).join('')}</div>`
+                }
                     </div>
                 </div>`;
         }
@@ -109,15 +109,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pill-modal-form').addEventListener('submit', handleModalSubmit);
     initializeManualMode();
     switchMode('auto');
-    
-    document.body.addEventListener('input', function(event) {
+
+    document.body.addEventListener('input', function (event) {
         if (event.target.id === 'numberOfWeeks' || event.target.id === 'startDate' || event.target.id === 'endDate') {
             updateInstructionsOnDateChange();
         }
     });
-    
+
     const strengthContainer = document.getElementById('strength-btn-container');
-    strengthContainer.addEventListener('click', function(event) {
+    strengthContainer.addEventListener('click', function (event) {
         const button = event.target.closest('.strength-btn');
         if (button) {
             const strength = button.dataset.strength;
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('previousDose').addEventListener('input', function() {
+    document.getElementById('previousDose').addEventListener('input', function () {
         document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
     });
     ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
@@ -179,17 +179,17 @@ function setupManualDayCards() {
         const dayIndex = (startDay + i) % 7;
         const dayName = thaiDays[dayIndex];
         const headerColor = dayHeaderColors[dayIndex];
-        
+
         const dayCard = document.createElement('div');
         dayCard.className = 'day-card border-2 border-gray-200 rounded-xl overflow-hidden flex flex-col';
         dayCard.dataset.dayIndex = dayIndex;
-        
+
         dayCard.innerHTML = `
             <div class="font-bold text-center py-3 text-lg ${headerColor} text-white">${dayName}</div>
             <div class="p-2 text-center bg-white flex-grow flex flex-col" id="manual-day-content-${dayIndex}"></div>
             <button onclick="showPillModal(${dayIndex})" class="add-pill-btn bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2 w-full text-2xl no-print">+</button>
         `;
-        
+
         grid.appendChild(dayCard);
         renderManualDay(dayIndex);
     }
@@ -213,7 +213,7 @@ function selectStrength(strength) {
     allButtons.forEach(btn => {
         const btnStrength = btn.dataset.strength;
         const colors = getStrengthColorClasses(btnStrength);
-        
+
         btn.classList.remove('selected', colors.bg, 'text-white');
         btn.classList.add('bg-white', colors.text, colors.border);
     });
@@ -258,10 +258,10 @@ function handleModalSubmit(e) {
     const quantityDecimal = parseFloat(quantityInput.value);
 
     if (!quantityInput.value) {
-        Swal.fire({ 
-            icon: 'warning', 
-            title: 'กรุณากรอกข้อมูล', 
-            text: 'กรุณากรอกจำนวนเม็ดยาที่ต้องการ' 
+        Swal.fire({
+            icon: 'warning',
+            title: 'กรุณากรอกข้อมูล',
+            text: 'กรุณากรอกจำนวนเม็ดยาที่ต้องการ'
         });
         return;
     }
@@ -279,8 +279,8 @@ function handleModalSubmit(e) {
     const remainder = quantityDecimal % 1;
 
     if (fullPills > 0) {
-        for(let i = 0; i < fullPills; i++){
-             manualSchedule[dayIndex].push({ mg, count: 1, half: false, quarter: false });
+        for (let i = 0; i < fullPills; i++) {
+            manualSchedule[dayIndex].push({ mg, count: 1, half: false, quarter: false });
         }
     }
     if (Math.abs(remainder - 0.25) < 0.01) {
@@ -309,13 +309,13 @@ function renderManualDay(dayIndex) {
     }, 0);
 
     let contentHtml = `<div class="text-sm text-gray-800 font-bold mb-2 h-6">${dailyDose > 0 ? `${dailyDose.toFixed(2)} mg` : ''}</div>`;
-    
+
     if (manualSchedule[dayIndex].length === 0) {
         contentHtml += `<div class="flex-grow flex items-center justify-center"><div class="text-center"><div class="text-4xl mb-2">🚫</div><div class="text-red-600 font-bold text-sm">หยุดยา</div></div></div>`;
     } else {
         const pillsContainer = document.createElement('div');
         pillsContainer.className = 'flex-grow flex flex-wrap items-center content-start justify-center gap-1 py-1 overflow-y-auto';
-        
+
         manualSchedule[dayIndex].forEach((pill, index) => {
             const fractionClass = pill.quarter ? 'pill-quarter-left' : (pill.half ? 'pill-half-left' : '');
             pillsContainer.innerHTML += `
@@ -348,10 +348,10 @@ function updateManualSummary() {
     const totalWeeklyDose = dailyDoses.reduce((a, b) => a + b, 0);
 
     weeklyDoseContainer.innerHTML = `<div class="text-gray-600 text-sm">ขนาดยารวมต่อสัปดาห์</div><div class="text-3xl font-bold text-blue-600">${totalWeeklyDose.toFixed(2)} mg</div>`;
-    
+
     const tempOption = { dailyDoses, combos: manualSchedule };
     const isDoseZero = totalWeeklyDose <= 0;
-    
+
     let summaryHtml = `<div class="section-card rounded-lg shadow-md p-6 mt-6" id="manual-summary-card"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-semibold text-gray-800">สรุปและวิธีกินยา</h3><button id="printBtnManual" onclick="printManualSchedule()" class="no-print bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 shadow-md text-sm flex items-center ${isDoseZero ? 'hidden' : ''}"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg><span>พิมพ์</span></button></div>`;
     summaryHtml += totalWeeklyDose > 0 || manualSchedule.flat().length > 0 ? generateMedicationInstructions(tempOption) : `<div class="text-center text-gray-500 p-4">ยังไม่มีการจัดยา</div>`;
     summaryHtml += `</div>`;
@@ -361,14 +361,14 @@ function updateManualSummary() {
 
 function clearManualSchedule() {
     Swal.fire({ title: 'ยืนยันการล้างข้อมูล?', text: "ข้อมูลการจัดยาทั้งหมดจะถูกลบ", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'ใช่, ล้างทั้งหมด!', cancelButtonText: 'ยกเลิก' })
-    .then((result) => {
-        if (result.isConfirmed) {
-            manualSchedule = [[], [], [], [], [], [], []];
-            for (let i = 0; i < 7; i++) renderManualDay(i);
-            updateManualSummary();
-            Swal.fire('ล้างข้อมูลแล้ว!', 'คุณสามารถเริ่มจัดยาใหม่ได้เลย', 'success');
-        }
-    });
+        .then((result) => {
+            if (result.isConfirmed) {
+                manualSchedule = [[], [], [], [], [], [], []];
+                for (let i = 0; i < 7; i++) renderManualDay(i);
+                updateManualSummary();
+                Swal.fire('ล้างข้อมูลแล้ว!', 'คุณสามารถเริ่มจัดยาใหม่ได้เลย', 'success');
+            }
+        });
 }
 
 function printManualSchedule() {
@@ -434,13 +434,13 @@ function showChangeIndicator() {
     const newDose = parseFloat(document.getElementById('newDose').value) || 0;
     const indicator = document.getElementById('changeIndicator');
     const changeText = document.getElementById('changeText');
-    
+
     if (previousDose === 0 && newDose > 0) {
         indicator.classList.remove('hidden');
         changeText.innerHTML = `<div class="text-gray-600"><div class="text-3xl font-bold">ขนาดยาใหม่</div><div class="text-lg">${newDose.toFixed(1)} mg/wk</div></div>`;
         return;
     }
-    
+
     if (previousDose === 0) {
         indicator.classList.add('hidden');
         changeText.innerHTML = '';
@@ -473,7 +473,7 @@ function findComb(target, availablePills, allowHalf, allowQuarter, minPillObject
         }
         if (pillIndex >= availablePills.length || objectCount >= maxPillObjects || remaining < -FLOAT_TOLERANCE) return;
         const pillMg = availablePills[pillIndex];
-        
+
         backtrack(remaining, currentCombo, pillIndex + 1, objectCount);
 
         const maxFullPills = Math.min(3, Math.floor((remaining + FLOAT_TOLERANCE) / pillMg));
@@ -581,7 +581,7 @@ function generateOptions() {
             }
         }
     }
-    
+
     options.forEach(opt => {
         opt.doseVariance = calculateDoseVariance(opt.dailyDoses);
         opt.totalSplits = countTotalSplitPills(opt.combos);
@@ -703,46 +703,84 @@ function generatePillVisual(combo) {
 //
 // ===================================================================================
 
-async function playTextWithGoogleTTS(text, buttonElement) {
-    const originalButtonContent = buttonElement.innerHTML;
-    const functionUrl = 'https://asia-southeast1-leaveopd-90667.cloudfunctions.net/synthesizeSpeech';
-    const statusDiv = document.getElementById('playing-status');
+function playTextWithGoogleTTS(text, buttonElement) {
+    console.log("Starting TTS...");
+    // 1. Convert SSML to plain text (approximate)
+    let spokenText = text.replace(/<break[^>]*>/g, ' , ').replace(/<[^>]+>/g, '');
 
-    try {
-        buttonElement.disabled = true;
-        buttonElement.innerHTML = '🔄 กำลังโหลดเสียง...';
-        if (statusDiv) statusDiv.style.display = 'block';
+    if (!('speechSynthesis' in window)) {
+        alert("ขออภัย เบราว์เซอร์ของคุณไม่รองรับการอ่านเสียง (Web Speech API)");
+        return;
+    }
 
-        const response = await fetch(functionUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ssml: text })
-        });
+    // Cancel any currently playing speech to reset state
+    window.speechSynthesis.cancel();
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Server error (${response.status}): ${errorText}`);
+    const utterance = new SpeechSynthesisUtterance(spokenText);
+    utterance.rate = 1.0; // Default rate
+
+    // Function to set voice and speak
+    const setVoiceAndSpeak = () => {
+        const voices = window.speechSynthesis.getVoices();
+        console.log("Voices loaded:", voices.length);
+
+        // Try to find a Thai voice
+        const thaiVoice = voices.find(v => v.lang.includes('th'));
+
+        if (thaiVoice) {
+            console.log("Thai voice found:", thaiVoice.name);
+            utterance.voice = thaiVoice;
+            utterance.lang = thaiVoice.lang;
+        } else {
+            console.warn("No Thai voice found, using default.");
+            utterance.lang = 'th-TH'; // Try setting lang tag anyway
         }
 
-        const data = await response.json();
-        const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-        
-        buttonElement.innerHTML = '▶️ กำลังเล่น...';
-        audio.play();
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '▶️ กำลังอ่าน...';
 
-        audio.onended = () => {
-            buttonElement.innerHTML = originalButtonContent;
-            buttonElement.disabled = false;
-            if (statusDiv) statusDiv.style.display = 'none';
+        const statusDiv = document.getElementById('playing-status');
+        if (statusDiv) {
+            statusDiv.style.display = 'block';
+            statusDiv.innerText = 'กำลังอ่าน... (ใช้เสียงจากเครื่อง)';
+        }
+
+        window.speechSynthesis.speak(utterance);
+    };
+
+    // Chrome requires waiting for voices to populate
+    if (window.speechSynthesis.getVoices().length === 0) {
+        console.log("Waiting for voices...");
+        window.speechSynthesis.onvoiceschanged = () => {
+            // Remove listener to prevent multiple calls
+            window.speechSynthesis.onvoiceschanged = null;
+            setVoiceAndSpeak();
         };
-
-    } catch (error) {
-        console.error('Failed to play speech:', error);
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-        buttonElement.innerHTML = originalButtonContent;
-        buttonElement.disabled = false;
-        if (statusDiv) statusDiv.style.display = 'none';
+    } else {
+        setVoiceAndSpeak();
     }
+
+    utterance.onend = function () {
+        console.log("TTS Ended");
+        buttonElement.innerHTML = 'แตะเพื่อฟังวิธีทานยา';
+        buttonElement.disabled = false;
+        const statusDiv = document.getElementById('playing-status');
+        if (statusDiv) statusDiv.style.display = 'none';
+    };
+
+    utterance.onerror = function (e) {
+        console.error('Speech synthesis error:', e);
+        buttonElement.innerHTML = 'แตะเพื่อฟังวิธีทานยา';
+        buttonElement.disabled = false;
+        const statusDiv = document.getElementById('playing-status');
+        if (statusDiv) statusDiv.style.display = 'none';
+
+        if (e.error === 'not-allowed') {
+            alert('เบราว์เซอร์ไม่อนุญาตให้อ่านเสียง (User Interaction Required)');
+        } else {
+            alert('เกิดข้อผิดพลาดในการอ่านเสียง: ' + e.error);
+        }
+    };
 }
 
 
@@ -760,7 +798,7 @@ function generateSpeechTextFromSchedule(schedule) {
         }
     });
 
-    Object.values(medicationGroups).sort((a,b) => b.mg - a.mg).forEach(instr => {
+    Object.values(medicationGroups).sort((a, b) => b.mg - a.mg).forEach(instr => {
         const { mg, half, quarter, count, days: instrDays } = instr;
         const pillText = quarter ? 'หนึ่งส่วนสี่เม็ด' : (half ? 'ครึ่งเม็ด' : `${count} เม็ด`);
         const dayText = formatDayGroups(groupConsecutiveDays(instrDays));
@@ -812,14 +850,14 @@ function generateDisplayInstructionsHTML(schedule) {
     if (Object.keys(medicationGroups).length === 0 && schedule.dailyDoses.every(d => d < 0.01)) {
         html += '<p class="text-gray-700 font-semibold">หยุดยาทุกวันตามคำสั่งแพทย์</p>';
     } else {
-        Object.values(medicationGroups).sort((a,b) => b.mg - a.mg).forEach(group => {
+        Object.values(medicationGroups).sort((a, b) => b.mg - a.mg).forEach(group => {
             const { mg, half, quarter, days } = group;
             const pillText = quarter ? 'หนึ่งส่วนสี่เม็ด' : (half ? 'ครึ่งเม็ด' : '1 เม็ด');
             const dayText = formatDayGroups(groupConsecutiveDays(days));
             const freq = days.length;
             const instructionLineForDisplay = `${mg} mg (${getPillColorName(mg)}) กิน ${pillText} สัปดาห์ละ ${freq} ครั้ง เฉพาะ ${dayText}`;
             const pillCountText = `${freq} เม็ด/1 สัปดาห์`;
-            
+
             const pillIconHtml = `<span class="pill pill-${mg}mg ${quarter ? 'pill-quarter-left' : (half ? 'pill-half-left' : '')}"></span>`;
 
             html += `<div class="text-sm p-3 ${getPillBgColor(mg)} border rounded flex items-center"><div class="flex-shrink-0 w-10 flex justify-center items-center mr-3">${pillIconHtml}</div><div class="flex-grow flex justify-between items-center gap-2"><span class="flex-grow">${instructionLineForDisplay}</span><span class="text-xs text-gray-600 font-semibold flex-shrink-0 whitespace-nowrap">${pillCountText}</span></div></div>`;
@@ -875,14 +913,14 @@ function generateQrCodeAndSpeechButton(option, containerId) {
 }
 
 function getPillColorName(mg) {
-    return {1: 'สีขาว', 2: 'สีส้ม', 3: 'สีฟ้า', 4: 'สีเหลือง', 5: 'สีชมพู'}[mg] || '';
+    return { 1: 'สีขาว', 2: 'สีส้ม', 3: 'สีฟ้า', 4: 'สีเหลือง', 5: 'สีชมพู' }[mg] || '';
 }
 function getPillBgColor(mg) {
-    return {1: 'bg-gray-100 border-gray-300', 2: 'bg-orange-100 border-orange-300', 3: 'bg-blue-100 border-blue-300', 4: 'bg-yellow-100 border-yellow-300', 5: 'bg-pink-100 border-pink-300'}[mg] || 'bg-gray-100 border-gray-300';
+    return { 1: 'bg-gray-100 border-gray-300', 2: 'bg-orange-100 border-orange-300', 3: 'bg-blue-100 border-blue-300', 4: 'bg-yellow-100 border-yellow-300', 5: 'bg-pink-100 border-pink-300' }[mg] || 'bg-gray-100 border-gray-300';
 }
 function groupConsecutiveDays(days) {
     if (days.length === 0) return [];
-    
+
     const sorted = [...days].sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
 
     const groups = [];
@@ -891,7 +929,7 @@ function groupConsecutiveDays(days) {
         for (let i = 1; i < sorted.length; i++) {
             const prev = currentGroup[currentGroup.length - 1];
             const current = sorted[i];
-            
+
             if ((current === 0 && prev === 6) || current === prev + 1) {
                 currentGroup.push(current);
             } else {
@@ -930,7 +968,7 @@ function doseToPillText(totalDose, mg) {
     }
     let text = parts.join('');
     if (fullPills === 0 && remainder > 0.01) {
-         text += 'เม็ด';
+        text += 'เม็ด';
     }
     return text || '0 เม็ด';
 }
@@ -1006,7 +1044,7 @@ function generateMedicationInstructions(option) {
                 const totalPhysicalPillsNeeded = Math.ceil((totalDailyDose / mg) * freq * numberOfWeeks);
                 const pillCountText = totalPhysicalPillsNeeded > 0 ? `${totalPhysicalPillsNeeded} เม็ด/${periodText}` : '';
                 // === MODIFICATION END ===
-                
+
                 const representativePill = { mg: mg, count: 1, half: false, quarter: false };
                 const pillIconHtml = generatePillVisual([representativePill]);
 
@@ -1014,7 +1052,7 @@ function generateMedicationInstructions(option) {
             });
         });
     }
-    
+
     const stopDays = [];
     for (let i = 0; i < 7; i++) {
         if (!activeDays.has(i)) {
@@ -1022,8 +1060,8 @@ function generateMedicationInstructions(option) {
         }
     }
     if (stopDays.length > 0 && stopDays.length < 7) {
-         const stopDayText = formatDayGroups(groupConsecutiveDays(stopDays));
-         html += `<div class="text-sm p-3 bg-red-50 border-red-200 border rounded flex items-center"><div class="flex-shrink-0 w-10 flex justify-center items-center mr-3 text-2xl">🚫</div><div class="flex-grow flex justify-between items-center gap-2"><span class="flex-grow"><strong>หยุดยา</strong> ใน <strong>${stopDayText}</strong></span></div></div>`;
+        const stopDayText = formatDayGroups(groupConsecutiveDays(stopDays));
+        html += `<div class="text-sm p-3 bg-red-50 border-red-200 border rounded flex items-center"><div class="flex-shrink-0 w-10 flex justify-center items-center mr-3 text-2xl">🚫</div><div class="flex-grow flex justify-between items-center gap-2"><span class="flex-grow"><strong>หยุดยา</strong> ใน <strong>${stopDayText}</strong></span></div></div>`;
     }
 
     html += '</div></div>';
@@ -1042,8 +1080,8 @@ function toggleSidebar() { document.getElementById('sidebar').classList.toggle('
 function togglePill(pillSize) { document.getElementById(`pill${pillSize}Btn`).classList.toggle('active'); document.getElementById(`pill${pillSize}`).checked = !document.getElementById(`pill${pillSize}`).checked; hideResults(); }
 function toggleAllowHalf() { document.getElementById('allowHalfBtn').classList.toggle('active'); document.getElementById('allowHalf').checked = !document.getElementById('allowHalf').checked; hideResults(); }
 function toggleAllowQuarter() { document.getElementById('allowQuarterBtn').classList.toggle('active'); document.getElementById('allowQuarter').checked = !document.getElementById('allowQuarter').checked; hideResults(); }
-function setSpecialPattern(p) { document.getElementById('weekendBtn').classList.toggle('active', p==='weekend'); document.getElementById('mwfBtn').classList.toggle('active', p==='mwf'); document.querySelector(`input[name="specialDayPattern"][value="${p}"]`).checked = true; hideResults(); }
-function setDayOrder(o) { document.getElementById('sundayBtn').classList.toggle('active', o==='sunday'); document.getElementById('mondayBtn').classList.toggle('active', o==='monday'); document.querySelector(`input[name="dayOrder"][value="${o}"]`).checked = true; hideResults(); setupManualDayCards(); }
+function setSpecialPattern(p) { document.getElementById('weekendBtn').classList.toggle('active', p === 'weekend'); document.getElementById('mwfBtn').classList.toggle('active', p === 'mwf'); document.querySelector(`input[name="specialDayPattern"][value="${p}"]`).checked = true; hideResults(); }
+function setDayOrder(o) { document.getElementById('sundayBtn').classList.toggle('active', o === 'sunday'); document.getElementById('mondayBtn').classList.toggle('active', o === 'monday'); document.querySelector(`input[name="dayOrder"][value="${o}"]`).checked = true; hideResults(); setupManualDayCards(); }
 
 function toggleDateRange() {
     const cb = document.getElementById('useDateRange'); cb.checked = !cb.checked;
@@ -1092,7 +1130,7 @@ function selectOption(optionIndex) {
     if (selectedOption >= 0) {
         document.getElementById(`option-card-${selectedOption}`)?.classList.remove('selected');
         const checkbox = document.getElementById(`checkbox-${selectedOption}`);
-        if(checkbox) {
+        if (checkbox) {
             checkbox.classList.remove('checked');
             checkbox.querySelector('.checkmark').classList.add('hidden');
         }
@@ -1114,7 +1152,7 @@ function updatePrintButtonVisibility() {
     document.getElementById('printBtnAuto').classList.toggle('hidden', selectedOption < 0);
 }
 
-document.getElementById('previousDose').addEventListener('input', function() {
+document.getElementById('previousDose').addEventListener('input', function () {
     document.getElementById('adjustmentButtons').classList.toggle('hidden', !(parseFloat(this.value) > 0));
 });
 ['previousDose', 'newDose'].forEach(id => document.getElementById(id).addEventListener('input', hideResults));
@@ -1148,7 +1186,7 @@ function printContent(elementToPrint, title, subtitle) {
 
     elementToPrint.querySelectorAll('.no-print').forEach(el => el.remove());
     elementToPrint.querySelector('h4')?.remove();
-    
+
     const qrCodeContainer = elementToPrint.querySelector('.print-only');
     let clonedQrContainer = null;
     if (qrCodeContainer) {
@@ -1188,7 +1226,7 @@ function printContent(elementToPrint, title, subtitle) {
     if (clonedQrContainer) {
         rightColumn.appendChild(clonedQrContainer);
     }
-    
+
     twoColumnContainer.appendChild(leftColumn);
     twoColumnContainer.appendChild(rightColumn);
     printDiv.appendChild(twoColumnContainer);
