@@ -125,6 +125,17 @@ export default function PatientLabel({ schedule }) {
                     <p className="text-sm text-gray-600">
                         ขนาดยารวม {totalWeeklyDose.toFixed(2)} mg/สัปดาห์
                     </p>
+                    {schedule.t && (
+                        <p className="text-xs text-gray-500 mt-1">
+                            📅 สร้างเมื่อ: {new Date(schedule.t).toLocaleDateString('th-TH', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </p>
+                    )}
                 </div>
 
                 {/* Daily Schedule Table */}

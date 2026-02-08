@@ -114,7 +114,8 @@ export function generateQrCodeUrl(option) {
                     h: pill.half,
                     q: pill.quarter
                 }))
-            )
+            ),
+            t: Date.now() // timestamp for creation date
         };
         const encodedSchedule = encodeURIComponent(JSON.stringify(compressedSchedule));
         return `${PUBLIC_BASE_URL}?schedule=${encodedSchedule}`;
