@@ -99,20 +99,16 @@ export default function PatientLabel({ schedule }) {
         }
     };
 
-    // Get pill description for a day
-    const getPillDescription = (dayIndex) => {
+    // Get pill visual only for a day (no text)
+    const getPillVisualOnly = (dayIndex) => {
         const combo = option.combos[dayIndex] || [];
         if (combo.length === 0) return null;
 
-        return combo.map((pill, idx) => {
-            const pillText = pill.quarter ? '¼ เม็ด' : (pill.half ? '½ เม็ด' : `${pill.count} เม็ด`);
-            return (
-                <div key={idx} className="flex items-center gap-1 justify-center">
-                    <PillVisual combo={[pill]} />
-                    <span className="text-xs">{pillText}</span>
-                </div>
-            );
-        });
+        return combo.map((pill, idx) => (
+            <div key={idx} className="flex justify-center">
+                <PillVisual combo={[pill]} />
+            </div>
+        ));
     };
 
     return (
@@ -168,7 +164,7 @@ export default function PatientLabel({ schedule }) {
                                             </div>
                                         ) : (
                                             <div className="flex flex-col gap-1">
-                                                {getPillDescription(dayIndex)}
+                                                {getPillVisualOnly(dayIndex)}
                                             </div>
                                         )}
                                     </div>
@@ -179,20 +175,23 @@ export default function PatientLabel({ schedule }) {
 
                     {/* Today's Highlight */}
                     <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             <span className="text-xl">📌</span>
-                            <div>
-                                <p className="text-sm font-bold text-blue-800">
+                            <div className="flex-grow">
+                                <p className="text-sm font-bold text-blue-800 mb-2">
                                     วันนี้ ({FULL_THAI_DAYS[today]})
                                 </p>
                                 {activeDays.has(today) ? (
-                                    <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         {(option.combos[today] || []).map((pill, idx) => {
                                             const pillText = pill.quarter ? 'หนึ่งส่วนสี่เม็ด' : (pill.half ? 'ครึ่งเม็ด' : `${pill.count} เม็ด`);
                                             return (
-                                                <span key={idx} className="text-sm text-gray-700">
-                                                    <strong>{getPillColorName(pill.mg)}</strong> {pillText}
-                                                </span>
+                                                <div key={idx} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border shadow-sm">
+                                                    <PillVisual combo={[pill]} />
+                                                    <span className="text-sm text-gray-700">
+                                                        <strong>{getPillColorName(pill.mg)}</strong> {pillText}
+                                                    </span>
+                                                </div>
                                             );
                                         })}
                                     </div>
