@@ -4,6 +4,7 @@ import AutoMode from './components/AutoMode';
 import ManualMode from './components/ManualMode';
 import DateCalculator from './components/DateCalculator';
 import PatientLabel from './components/PatientLabel';
+import INRAdvisor from './components/INRAdvisor';
 import './index.css';
 
 // Check for patient label mode from URL
@@ -37,6 +38,7 @@ function CalculatorApp() {
   // Mode state
   const [mode, setMode] = useState('auto'); // 'auto' or 'manual'
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [inrAdvisorOpen, setInrAdvisorOpen] = useState(false);
 
   // Settings state
   const [pillSettings, setPillSettings] = useState({
@@ -214,6 +216,15 @@ function CalculatorApp() {
         onSetSpecialPattern={(p) => { setSpecialPattern(p); setSelectedOption(-1); }}
       />
 
+      {/* INR Advisor Modal */}
+      <INRAdvisor
+        isOpen={inrAdvisorOpen}
+        onClose={() => setInrAdvisorOpen(false)}
+        currentTwd={selectedOption >= 0 && allOptions[selectedOption]
+          ? allOptions[selectedOption].dailyDoses.reduce((a, b) => a + b, 0)
+          : null}
+      />
+
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6 max-w-6xl" id="main-content">
         {/* Header */}
@@ -241,6 +252,14 @@ function CalculatorApp() {
               <span className="hidden sm:inline">คู่มือการใช้งาน</span>
               <span className="sm:hidden">คู่มือ</span>
             </a>
+            <button
+              onClick={() => setInrAdvisorOpen(true)}
+              className="bg-purple-500 text-white px-3 py-2 rounded-md hover:bg-purple-600 transition-colors flex items-center gap-2 text-sm shadow-md"
+            >
+              <span>💉</span>
+              <span className="hidden sm:inline">INR Advisor</span>
+              <span className="sm:hidden">INR</span>
+            </button>
           </div>
 
           <div className="text-center">
