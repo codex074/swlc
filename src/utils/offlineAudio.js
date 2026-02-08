@@ -2,7 +2,8 @@
 // Uses pre-recorded audio files to construct spoken instructions
 
 // Audio file paths mapping
-const AUDIO_BASE_PATH = '/audio';
+// ใช้ BASE_URL จาก Vite เพื่อให้ path ถูกต้องทั้ง dev และ production
+const AUDIO_BASE_PATH = `${import.meta.env.BASE_URL}audio`;
 
 // Audio timing settings
 const PAUSE_DELAY_MS = 0; // ไม่มี pause เลย

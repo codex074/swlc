@@ -3,9 +3,37 @@ import Sidebar from './components/Sidebar';
 import AutoMode from './components/AutoMode';
 import ManualMode from './components/ManualMode';
 import DateCalculator from './components/DateCalculator';
+import PatientLabel from './components/PatientLabel';
 import './index.css';
 
+// Check for patient label mode from URL
+function getScheduleFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const scheduleParam = params.get('schedule');
+    if (scheduleParam) {
+      return JSON.parse(decodeURIComponent(scheduleParam));
+    }
+  } catch (e) {
+    console.error('Failed to parse schedule from URL:', e);
+  }
+  return null;
+}
+
 function App() {
+  // Check if this is patient label view
+  const [patientSchedule] = useState(() => getScheduleFromUrl());
+
+  // If we have a schedule in URL, show patient label view
+  if (patientSchedule) {
+    return <PatientLabel schedule={patientSchedule} />;
+  }
+
+  // Otherwise show the calculator app
+  return <CalculatorApp />;
+}
+
+function CalculatorApp() {
   // Mode state
   const [mode, setMode] = useState('auto'); // 'auto' or 'manual'
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -91,7 +119,7 @@ function App() {
     header.className = 'print-header';
     header.innerHTML = `
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="/hospital_logo.png" style="height: 60px; margin: 0 auto 10px;" />
+        <img src="${import.meta.env.BASE_URL}hospital_logo.png" style="height: 60px; margin: 0 auto 10px;" />
         <div class="print-title">ขนาดยาวาร์ฟาริน (Warfarin) ที่รับประทาน</div>
         <div class="print-subtitle">ขนาดยารวม ${totalDose.toFixed(2)} mg/สัปดาห์</div>
         <div style="font-size: 12px; margin-top: 5px;">
@@ -217,7 +245,7 @@ function App() {
 
           <div className="text-center">
             <img
-              src="/hospital_logo.png"
+              src={`${import.meta.env.BASE_URL}hospital_logo.png`}
               alt="โลโก้โรงพยาบาล"
               id="hospital-logo"
               className="h-28 object-contain inline-block mb-4"
