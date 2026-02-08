@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FLOAT_TOLERANCE, getPillColorName, getPillBgColor } from '../utils/constants';
+import { FLOAT_TOLERANCE, getPillColorName, getPillBgColor, THAI_DAYS, DAY_HEADER_COLORS, FULL_THAI_DAYS } from '../utils/constants';
 import { groupConsecutiveDays, formatDayGroups, doseToPillText } from '../utils/pillCalculator';
 import { playMedicationAudio, stopAudio } from '../utils/offlineAudio';
 import { PillVisual } from './Pill';
 
 export default function PatientLabel({ schedule }) {
     const [speechState, setSpeechState] = useState('idle');
+
+    // Get current day (JavaScript: 0=Sunday, 1=Monday, etc.)
+    const today = new Date().getDay();
 
     // Convert compressed schedule back to full format
     const option = {
@@ -96,6 +99,22 @@ export default function PatientLabel({ schedule }) {
         }
     };
 
+    // Get pill description for a day
+    const getPillDescription = (dayIndex) => {
+        const combo = option.combos[dayIndex] || [];
+        if (combo.length === 0) return null;
+
+        return combo.map((pill, idx) => {
+            const pillText = pill.quarter ? '¼ เม็ด' : (pill.half ? '½ เม็ด' : `${pill.count} เม็ด`);
+            return (
+                <div key={idx} className="flex items-center gap-1 justify-center">
+                    <PillVisual combo={[pill]} />
+                    <span className="text-xs">{pillText}</span>
+                </div>
+            );
+        });
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 py-6 px-4">
             <div className="max-w-lg mx-auto">
@@ -112,6 +131,77 @@ export default function PatientLabel({ schedule }) {
                     <p className="text-sm text-gray-600">
                         ขนาดยารวม {totalWeeklyDose.toFixed(2)} mg/สัปดาห์
                     </p>
+                </div>
+
+                {/* Daily Schedule Table */}
+                <div className="bg-white rounded-xl shadow-lg p-4 mb-4">
+                    <h2 className="font-bold text-lg mb-3 text-gray-800 flex items-center">
+                        <span className="text-2xl mr-2">📅</span>
+                        ตารางยาประจำวัน
+                    </h2>
+                    <div className="grid grid-cols-7 gap-1">
+                        {[0, 1, 2, 3, 4, 5, 6].map(dayIndex => {
+                            const isToday = dayIndex === today;
+                            const hasNoPill = !activeDays.has(dayIndex);
+
+                            return (
+                                <div
+                                    key={dayIndex}
+                                    className={`rounded-lg overflow-hidden ${isToday ? 'ring-3 ring-blue-500 ring-offset-1' : ''}`}
+                                >
+                                    {/* Day Header */}
+                                    <div className={`${DAY_HEADER_COLORS[dayIndex]} text-white text-center py-1 text-xs font-bold relative`}>
+                                        {THAI_DAYS[dayIndex]}
+                                        {isToday && (
+                                            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] px-1 rounded-full animate-pulse">
+                                                วันนี้
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Pill Content */}
+                                    <div className={`min-h-[60px] p-1 flex flex-col items-center justify-center ${isToday ? 'bg-blue-50' : 'bg-gray-50'} ${hasNoPill ? 'bg-red-50' : ''}`}>
+                                        {hasNoPill ? (
+                                            <div className="text-center">
+                                                <span className="text-lg">🚫</span>
+                                                <p className="text-[9px] text-red-600 font-medium">หยุดยา</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-1">
+                                                {getPillDescription(dayIndex)}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Today's Highlight */}
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl">📌</span>
+                            <div>
+                                <p className="text-sm font-bold text-blue-800">
+                                    วันนี้ ({FULL_THAI_DAYS[today]})
+                                </p>
+                                {activeDays.has(today) ? (
+                                    <div className="flex items-center gap-2 mt-1">
+                                        {(option.combos[today] || []).map((pill, idx) => {
+                                            const pillText = pill.quarter ? 'หนึ่งส่วนสี่เม็ด' : (pill.half ? 'ครึ่งเม็ด' : `${pill.count} เม็ด`);
+                                            return (
+                                                <span key={idx} className="text-sm text-gray-700">
+                                                    <strong>{getPillColorName(pill.mg)}</strong> {pillText}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-red-600 font-medium">หยุดยาวันนี้</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Medication Instructions Card */}
