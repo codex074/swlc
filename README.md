@@ -2,6 +2,10 @@
 
 ระบบช่วยคำนวณและสร้างฉลากยาวาร์ฟาริน (Warfarin) สำหรับผู้ป่วย พร้อมระบบอ่านออกเสียงวิธีทานยาแบบ Offline
 
+🔗 **Live Demo**: https://codex074.github.io/swlc/
+
+---
+
 ## 🚀 Tech Stack
 
 | เทคโนโลยี | เวอร์ชัน | หน้าที่ |
@@ -13,127 +17,89 @@
 | QRCode.react | 4.x | สร้าง QR Code |
 | SweetAlert2 | 11.x | Alert/Modal |
 
+---
+
+## ✨ Features
+
+### 1. คำนวณขนาดยา
+- **โหมดอัตโนมัติ**: ใส่ dose → แสดงตัวเลือก combination
+- **โหมด Manual**: เลือกเม็ดยาเองทีละวัน
+- รองรับยา 1-5 mg (5 สี)
+- รองรับเศษ ½ และ ¼ เม็ด
+
+### 2. ฉลากยาพิมพ์
+- QR Code สำหรับเปิดฉลากออนไลน์
+- คำแนะนำเพิ่มเติม 4 ข้อ
+- โลโก้โรงพยาบาล
+
+### 3. ฉลากยาออนไลน์ (สแกน QR)
+- 📅 **ตารางยาประจำวัน** 7 วัน
+- 🔵 **Highlight วันปัจจุบัน** พร้อม badge "วันนี้"
+- 📌 **กล่องสรุปวันนี้** - บอกว่าวันนี้กินยาสีอะไร กี่เม็ด
+- 🎧 **ปุ่มฟังเสียง** - อ่านวิธีทานยาแบบ Offline
+- 📋 คำแนะนำเพิ่มเติม
+
+### 4. ระบบ Offline Audio
+- ใช้ **Web Audio API** เล่นเสียงต่อเนื่องไม่มี gap
+- **Auto-trim silence** จากไฟล์เสียง
+- รองรับการหยุดเสียงระหว่างเล่น
+
+---
+
 ## 📁 โครงสร้างโปรเจกต์
 
 ```
 swlc-react/
 ├── public/
-│   └── audio/                    # ไฟล์เสียงสำหรับอ่านฉลาก
-│       ├── amounts/              # เสียงจำนวนเม็ด
-│       ├── days/                 # เสียงวันในสัปดาห์
-│       ├── frequency/            # เสียงความถี่
-│       ├── phrases/              # เสียงคำศัพท์ทั่วไป
-│       ├── pills/                # เสียงขนาดยา+สี
-│       └── audio_phrases.json    # รายการไฟล์เสียงทั้งหมด
+│   └── audio/                    # ไฟล์เสียง
+│       ├── amounts/              # จำนวนเม็ด
+│       ├── days/                 # วันในสัปดาห์
+│       ├── frequency/            # ความถี่
+│       ├── phrases/              # คำศัพท์ทั่วไป
+│       ├── pills/                # ขนาดยา+สี
+│       └── audio_phrases.json
 ├── src/
-│   ├── components/               # React Components
-│   │   ├── App.jsx               # Main App
-│   │   ├── AutoMode.jsx          # โหมดอัตโนมัติ (ใส่ dose)
-│   │   ├── ManualMode.jsx        # โหมด Manual (เลือกเม็ดยาเอง)
-│   │   ├── MedicationInstructions.jsx  # แสดงวิธีทานยา + ปุ่มฟัง
-│   │   ├── DateCalculator.jsx    # คำนวณวันที่
-│   │   ├── DayCard.jsx           # Card แสดงยาแต่ละวัน
-│   │   ├── OptionCard.jsx        # Card แสดง Option
-│   │   ├── Pill.jsx              # Visual เม็ดยา
-│   │   ├── PillModal.jsx         # Modal เลือกเม็ดยา
-│   │   └── Sidebar.jsx           # Sidebar เลือกขนาดยา
-│   ├── utils/                    # Utility Functions
-│   │   ├── constants.js          # ค่าคงที่ (สี, ชื่อ)
-│   │   ├── offlineAudio.js       # ⭐ Offline Audio Player
-│   │   ├── pillCalculator.js     # คำนวณ combination ยา
-│   │   └── speechUtils.js        # สร้าง URL สำหรับ TTS
-│   ├── index.css                 # Global Styles
-│   └── main.jsx                  # Entry Point
+│   ├── components/
+│   │   ├── AutoMode.jsx          # โหมดอัตโนมัติ
+│   │   ├── ManualMode.jsx        # โหมด Manual
+│   │   ├── PatientLabel.jsx      # ⭐ ฉลากออนไลน์สำหรับผู้ป่วย
+│   │   ├── MedicationInstructions.jsx
+│   │   ├── DayCard.jsx
+│   │   ├── OptionCard.jsx
+│   │   ├── Pill.jsx
+│   │   ├── PillModal.jsx
+│   │   └── Sidebar.jsx
+│   ├── utils/
+│   │   ├── constants.js
+│   │   ├── offlineAudio.js       # ⭐ Web Audio API Player
+│   │   ├── pillCalculator.js
+│   │   └── speechUtils.js
+│   ├── App.jsx
+│   └── main.jsx
 └── package.json
 ```
 
 ---
 
-## 🎵 ระบบ Offline Audio Player
+## 🎵 Offline Audio System
 
-### หลักการทำงาน
-
-ใช้ **Web Audio API** เพื่อเล่นไฟล์เสียงต่อเนื่องแบบไม่มี gap:
-
-1. **Preload** - โหลดไฟล์เสียงทั้งหมดเป็น AudioBuffer
-2. **Trim Silence** - ตัด silence ออกจากต้น/ท้ายไฟล์อัตโนมัติ
-3. **Schedule** - จัดคิวเสียงด้วย `source.start(time)` เพื่อ timing แม่นยำ
-4. **Overlap** - ปรับได้ว่าเสียงจะทับกันหรือห่างกันเท่าไหร่
-
-### ไฟล์หลัก: `src/utils/offlineAudio.js`
+### Timing Settings
 
 ```javascript
-// ค่าปรับแต่ง timing
-const PAUSE_DELAY_MS = 0;        // ช่วงหยุดระหว่าง group (ms)
-const OVERLAP_SECONDS = -0.01;   // ค่าลบ = มี gap, ค่าบวก = overlap
-
-// Functions หลัก
-playMedicationAudio(schedule, setButtonState)  // เล่นเสียง
-stopAudio()                                     // หยุดเสียง
-generateAudioSequence(schedule)                 // สร้าง sequence
+const PAUSE_DELAY_MS = 0;        // ไม่มี pause ระหว่าง group
+const OVERLAP_SECONDS = -0.01;   // 10ms gap ระหว่างเสียง
 ```
 
 ### ลำดับการอ่าน
 
 ```
 "ยาขนาด" → "2 มิลลิกรัม สีส้ม" → "กิน" → "1 เม็ด" → 
-"สัปดาห์ละ 2 ครั้ง" → "เฉพาะ" → "วันจันทร์ วันพุธ"
+"สัปดาห์ละ 2 ครั้ง" → "เฉพาะ" → "วันจันทร์ และวันพุธ"
 ```
 
-### โครงสร้างไฟล์เสียง
-
-ดู `public/audio/audio_phrases.json` สำหรับรายการไฟล์ทั้งหมด:
-
-| กลุ่ม | ตัวอย่างไฟล์ | ข้อความ |
-|-------|-------------|---------|
-| medicine | `phrases/medicine.mp3` | "ยาขนาด" |
-| pill_mg_color | `pills/2mg_orange.mp3` | "สอง มิลลิกรัม สีส้ม" |
-| take | `phrases/take.mp3` | "กิน" |
-| amount | `amounts/one.mp3` | "หนึ่งเม็ด" |
-| frequency | `frequency/weekly_2.mp3` | "สัปดาห์ละสองครั้ง" |
-| only | `phrases/only.mp3` | "เฉพาะ" |
-| days | `days/monday.mp3` | "วันจันทร์" |
-| stop | `phrases/stop.mp3` | "หยุดยา" |
-
----
-
-## 🎨 Styling
-
-### Tailwind CSS 4.x
-
-ใช้ Tailwind CSS ผ่าน Vite plugin:
-
-```javascript
-// vite.config.js
-import tailwindcss from '@tailwindcss/vite'
-
-export default {
-  plugins: [react(), tailwindcss()]
-}
-```
-
-### สียา (Pill Colors)
-
-กำหนดใน `src/utils/constants.js`:
-
-| mg | สี | CSS Class |
-|----|-----|-----------|
-| 1 | ขาว | `bg-gray-100` |
-| 2 | ส้ม | `bg-orange-100` |
-| 3 | ฟ้า | `bg-blue-100` |
-| 4 | เหลือง | `bg-yellow-100` |
-| 5 | ชมพู | `bg-pink-100` |
-
-### Print Styles
-
-ใช้ CSS Media Query สำหรับพิมพ์:
-
-```css
-@media print {
-  .no-print { display: none; }
-  .qr-code-container { display: block !important; }
-}
-```
+### การเรียงลำดับวัน
+- เริ่มจากวันจันทร์ (1) ไปวันเสาร์ (6) แล้วค่อยวันอาทิตย์ (0)
+- เพิ่มคำว่า "และ" ก่อนวันสุดท้าย
 
 ---
 
@@ -149,94 +115,66 @@ npm run dev
 # Build สำหรับ production
 npm run build
 
-# Preview production build
-npm run preview
+# Deploy ไป GitHub Pages
+npm run deploy
 ```
 
 ---
 
-## 📝 การเพิ่ม/แก้ไขไฟล์เสียง
+## 🌐 GitHub Pages Deployment
 
-1. **อัดเสียง** ตามข้อความใน `audio_phrases.json`
-2. **บันทึกเป็น MP3** ใส่ในโฟลเดอร์ที่ตรงกัน
-3. **ตัด silence** ให้สั้นที่สุด (หรือระบบจะ auto-trim)
-4. **ทดสอบ** โดยกดปุ่ม "ฟังวิธีทานยา"
+1. ตั้งค่า `vite.config.js`:
+```javascript
+export default defineConfig({
+  base: '/swlc/',
+  plugins: [react(), tailwindcss()],
+})
+```
 
-### Tips อัดเสียง
-
-- ใช้ sample rate 44100 Hz หรือ 48000 Hz
-- ตัด silence ต้น/ท้ายให้เหลือ ~50ms
-- รักษา volume ให้สม่ำเสมอ
-- ใช้ bit rate 128kbps ขึ้นไป
-
----
-
-## 🌐 ภาษา
-
-- **UI**: ภาษาไทย 100%
-- **Variable/Function names**: ภาษาอังกฤษ
-- **Comments**: ภาษาไทย (เฉพาะส่วนสำคัญ)
+2. Deploy:
+```bash
+npm run deploy
+```
 
 ---
 
-## 📦 Dependencies สำคัญ
+## 🎨 สียา
 
+| mg | สี | Background |
+|----|-----|-----------|
+| 1 | ขาว | `bg-gray-100` |
+| 2 | ส้ม | `bg-orange-100` |
+| 3 | ฟ้า | `bg-blue-100` |
+| 4 | เหลือง | `bg-yellow-100` |
+| 5 | ชมพู | `bg-pink-100` |
+
+---
+
+## 📱 Patient Label URL Format
+
+```
+https://codex074.github.io/swlc/?schedule={encoded_json}
+```
+
+Schedule structure:
 ```json
 {
-  "react": "^19.2.0",
-  "qrcode.react": "^4.2.0",
-  "sweetalert2": "^11.26.18",
-  "tailwindcss": "^4.1.18",
-  "vite": "^7.2.4"
+  "d": [2, 2, 2, 0, 0, 2, 2],  // dailyDoses
+  "c": [[{m:2, n:1, h:false, q:false}], ...]  // combos
 }
 ```
 
 ---
 
-## 🔄 Flow การทำงาน
-
-```mermaid
-graph TD
-    A[User เลือก Dose] --> B{Mode?}
-    B -->|Auto| C[คำนวณ Pill Combinations]
-    B -->|Manual| D[User เลือกเม็ดยาเอง]
-    C --> E[แสดง Options]
-    D --> E
-    E --> F[User เลือก Option]
-    F --> G[แสดงคำแนะนำการทานยา]
-    G --> H{ปุ่มฟัง?}
-    H -->|กด| I[Load Audio Files]
-    I --> J[Trim Silence]
-    J --> K[Schedule Playback]
-    K --> L[เล่นเสียงต่อเนื่อง]
-```
-
----
-
-## 🐛 การแก้ไขปัญหา
-
-### เสียงมี gap/ไม่ต่อเนื่อง
-
-ปรับค่าใน `offlineAudio.js`:
-```javascript
-const OVERLAP_SECONDS = 0.05; // เพิ่มค่าให้มากขึ้น
-```
-
-### ไม่มีเสียง
-
-1. ตรวจสอบว่ามีไฟล์เสียงใน `public/audio/`
-2. ดู Console สำหรับ error message
-3. ตรวจสอบ path ใน `offlineAudio.js`
-
-### ปุ่มหยุดไม่ทำงาน
-
-ตรวจสอบว่า `disabled` prop ใน button component ถูกต้อง:
-```jsx
-disabled={speechState === 'loading'} // ไม่ใช่ !== 'idle'
-```
-
----
-
-## 📄 License
+## 📝 License
 
 MIT License
+
+---
+
+## 👤 Copyright
+
+**© 2025 Ph.D. Teeradet Wichai**  
+Pharmacy Department, Uttaradit Hospital
+
+---
