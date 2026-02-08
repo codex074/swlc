@@ -1,0 +1,195 @@
+[
+    {
+        "group": "medicine",
+        "description": "ยาขนาด (นำหน้า mg)",
+        "files": [
+            {
+                "key": "medicine",
+                "text": "ยา-ขนาด",
+                "filename": "phrases/medicine.mp3"
+            }
+        ]
+    },
+    {
+        "group": "pill_mg_color",
+        "description": "X มิลลิกรัม สี...",
+        "files": [
+            {
+                "key": "1",
+                "text": "หนึ่ง-มิล-ลิ-กรัม-สี-ขาว",
+                "filename": "pills/1mg_white.mp3"
+            },
+            {
+                "key": "2",
+                "text": "สอง-มิล-ลิ-กรัม-สี-ส้ม",
+                "filename": "pills/2mg_orange.mp3"
+            },
+            {
+                "key": "3",
+                "text": "สาม-มิล-ลิ-กรัม-สี-ฟ้า",
+                "filename": "pills/3mg_blue.mp3"
+            },
+            {
+                "key": "4",
+                "text": "สี่-มิล-ลิ-กรัม-สี-เหลือง",
+                "filename": "pills/4mg_yellow.mp3"
+            },
+            {
+                "key": "5",
+                "text": "ห้า-มิล-ลิ-กรัม-สี-ชมพู",
+                "filename": "pills/5mg_pink.mp3"
+            }
+        ]
+    },
+    {
+        "group": "take",
+        "description": "กิน",
+        "files": [
+            {
+                "key": "take",
+                "text": "กิน",
+                "filename": "phrases/take.mp3"
+            }
+        ]
+    },
+    {
+        "group": "amount",
+        "description": "จำนวนเม็ด",
+        "files": [
+            {
+                "key": "quarter",
+                "text": "หนึ่ง-ส่วน-สี่-เม็ด",
+                "filename": "amounts/quarter.mp3"
+            },
+            {
+                "key": "half",
+                "text": "ครึ่ง-เม็ด",
+                "filename": "amounts/half.mp3"
+            },
+            {
+                "key": "1",
+                "text": "หนึ่ง-เม็ด",
+                "filename": "amounts/one.mp3"
+            },
+            {
+                "key": "2",
+                "text": "สอง-เม็ด",
+                "filename": "amounts/two.mp3"
+            },
+            {
+                "key": "3",
+                "text": "สาม-เม็ด",
+                "filename": "amounts/three.mp3"
+            }
+        ]
+    },
+    {
+        "group": "frequency",
+        "description": "ความถี่ต่อสัปดาห์",
+        "files": [
+            {
+                "key": "everyday",
+                "text": "ทุก-วัน",
+                "filename": "frequency/everyday.mp3"
+            },
+            {
+                "key": "1",
+                "text": "สัป-ดาห์-ละ-หนึ่ง-ครั้ง",
+                "filename": "frequency/weekly_1.mp3"
+            },
+            {
+                "key": "2",
+                "text": "สัป-ดาห์-ละ-สอง-ครั้ง",
+                "filename": "frequency/weekly_2.mp3"
+            },
+            {
+                "key": "3",
+                "text": "สัป-ดาห์-ละ-สาม-ครั้ง",
+                "filename": "frequency/weekly_3.mp3"
+            },
+            {
+                "key": "4",
+                "text": "สัป-ดาห์-ละ-สี่-ครั้ง",
+                "filename": "frequency/weekly_4.mp3"
+            },
+            {
+                "key": "5",
+                "text": "สัป-ดาห์-ละ-ห้า-ครั้ง",
+                "filename": "frequency/weekly_5.mp3"
+            },
+            {
+                "key": "6",
+                "text": "สัป-ดาห์-ละ-หก-ครั้ง",
+                "filename": "frequency/weekly_6.mp3"
+            }
+        ]
+    },
+    {
+        "group": "only",
+        "description": "เฉพาะ",
+        "files": [
+            {
+                "key": "only",
+                "text": "เฉพาะ",
+                "filename": "phrases/only.mp3"
+            }
+        ]
+    },
+    {
+        "group": "days",
+        "description": "วันในสัปดาห์",
+        "files": [
+            {
+                "key": "0",
+                "text": "วัน-อาทิตย์",
+                "filename": "days/sunday.mp3"
+            },
+            {
+                "key": "1",
+                "text": "วัน-จันทร์",
+                "filename": "days/monday.mp3"
+            },
+            {
+                "key": "2",
+                "text": "วัน-อังคาร",
+                "filename": "days/tuesday.mp3"
+            },
+            {
+                "key": "3",
+                "text": "วัน-พุธ",
+                "filename": "days/wednesday.mp3"
+            },
+            {
+                "key": "4",
+                "text": "วัน-พฤหัส-บดี",
+                "filename": "days/thursday.mp3"
+            },
+            {
+                "key": "5",
+                "text": "วัน-ศุกร์",
+                "filename": "days/friday.mp3"
+            },
+            {
+                "key": "6",
+                "text": "วัน-เสาร์",
+                "filename": "days/saturday.mp3"
+            }
+        ]
+    },
+    {
+        "group": "stop",
+        "description": "หยุดยา",
+        "files": [
+            {
+                "key": "and",
+                "text": "และ",
+                "filename": "phrases/and.mp3"
+            },
+            {
+                "key": "stop",
+                "text": "หยุด-ยา",
+                "filename": "phrases/stop.mp3"
+            }
+        ]
+    }
+]
