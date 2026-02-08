@@ -143,16 +143,11 @@ export default function PatientLabel({ schedule }) {
                             return (
                                 <div
                                     key={dayIndex}
-                                    className={`rounded-lg overflow-hidden ${isToday ? 'ring-3 ring-blue-500 ring-offset-1' : ''}`}
+                                    className={`rounded-lg overflow-hidden ${isToday ? 'ring-4 ring-blue-600 ring-offset-2 shadow-lg' : ''}`}
                                 >
                                     {/* Day Header */}
-                                    <div className={`${DAY_HEADER_COLORS[dayIndex]} text-white text-center py-1 text-xs font-bold relative`}>
+                                    <div className={`${DAY_HEADER_COLORS[dayIndex]} text-white text-center py-1 text-xs font-bold`}>
                                         {THAI_DAYS[dayIndex]}
-                                        {isToday && (
-                                            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] px-1 rounded-full animate-pulse">
-                                                วันนี้
-                                            </span>
-                                        )}
                                     </div>
 
                                     {/* Pill Content */}
