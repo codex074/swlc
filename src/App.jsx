@@ -58,7 +58,7 @@ function CalculatorApp() {
 
   // Auto mode selection
   const [selectedOption, setSelectedOption] = useState(-1);
-  const [allOptions, setAllOptions] = useState([]);
+  const [currentTwd, setCurrentTwd] = useState(null);
 
   // Manual mode ref for printing
   const manualModeRef = useRef(null);
@@ -220,9 +220,7 @@ function CalculatorApp() {
       <INRAdvisor
         isOpen={inrAdvisorOpen}
         onClose={() => setInrAdvisorOpen(false)}
-        currentTwd={selectedOption >= 0 && allOptions[selectedOption]
-          ? allOptions[selectedOption].dailyDoses.reduce((a, b) => a + b, 0)
-          : null}
+        currentTwd={currentTwd}
       />
 
       {/* Main Content */}
@@ -305,7 +303,7 @@ function CalculatorApp() {
               dateConfig={dateConfig}
               selectedOption={selectedOption}
               onSelectOption={setSelectedOption}
-              onPrint={printContent}
+              onCurrentTwdChange={setCurrentTwd}
             />
             <DateCalculator
               useDateRange={useDateRange}

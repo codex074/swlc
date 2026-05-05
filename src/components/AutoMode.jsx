@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { roundToHalf, OPTIONS_PER_PAGE } from '../utils/constants';
 import { generateOptions } from '../utils/pillCalculator';
 import OptionCard from './OptionCard';
@@ -122,7 +122,7 @@ export default function AutoMode({
     dateConfig,
     selectedOption,
     onSelectOption,
-    onPrint
+    onCurrentTwdChange
 }) {
     const [previousDose, setPreviousDose] = useState('');
     const [newDose, setNewDose] = useState('');
@@ -155,6 +155,20 @@ export default function AutoMode({
     }, [showResults, newDose, allowHalf, allowQuarter, specialPattern, availablePills]);
 
     const displayedOptions = allOptions.slice(0, displayedCount);
+
+    useEffect(() => {
+        if (!onCurrentTwdChange) {
+            return;
+        }
+
+        if (selectedOption >= 0 && allOptions[selectedOption]) {
+            const totalWeeklyDose = allOptions[selectedOption].dailyDoses.reduce((sum, dose) => sum + dose, 0);
+            onCurrentTwdChange(totalWeeklyDose);
+            return;
+        }
+
+        onCurrentTwdChange(null);
+    }, [allOptions, onCurrentTwdChange, selectedOption]);
 
     const handleCalculate = () => {
         const dose = parseFloat(newDose);

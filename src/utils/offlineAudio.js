@@ -231,7 +231,7 @@ function stopAudio() {
     scheduledSources.forEach(source => {
         try {
             source.stop();
-        } catch (e) {
+        } catch {
             // Ignore errors if already stopped
         }
     });

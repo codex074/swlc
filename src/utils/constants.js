@@ -23,7 +23,7 @@ export const PILL_COLORS = {
 };
 
 // Public base URL for QR codes
-export const PUBLIC_BASE_URL = 'https://codex074.github.io/swlc/';
+export const PUBLIC_BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL || 'https://codex074.github.io/swlc/';
 
 // Algorithm constants
 export const FLOAT_TOLERANCE = 0.01;

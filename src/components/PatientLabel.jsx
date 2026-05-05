@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FLOAT_TOLERANCE, getPillColorName, getPillBgColor, THAI_DAYS, DAY_HEADER_COLORS, FULL_THAI_DAYS } from '../utils/constants';
 import { groupConsecutiveDays, formatDayGroups, doseToPillText } from '../utils/pillCalculator';
 import { playMedicationAudio, stopAudio } from '../utils/offlineAudio';

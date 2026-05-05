@@ -105,15 +105,37 @@ const OVERLAP_SECONDS = -0.01;   // 10ms gap ระหว่างเสีย�
 
 ## 🔧 การติดตั้งและรัน
 
+### Desktop App (Electron: Windows / macOS)
+
 ```bash
 # ติดตั้ง dependencies
 npm install
 
-# รัน development server
+# รันแบบ Desktop ระหว่างพัฒนา
 npm run dev
 
-# Build สำหรับ production
-npm run build
+# Build ตัวติดตั้งสำหรับ Desktop
+npm run build:desktop
+```
+
+ไฟล์ที่ build แล้วจะอยู่ในโฟลเดอร์ `release/`
+
+หมายเหตุ:
+- Desktop app ใช้ Electron shell ครอบ React app เดิม
+- QR Code ยังสามารถชี้ไป public URL ได้ผ่าน `VITE_PUBLIC_BASE_URL`
+- production desktop build ใช้ custom `app://` protocol เพื่อให้ asset และไฟล์เสียง offline ทำงานได้เสถียร
+
+### Web App (Vite / GitHub Pages)
+
+```bash
+# ติดตั้ง dependencies
+npm install
+
+# รัน development server แบบเว็บ
+npm run dev:renderer
+
+# Build สำหรับ GitHub Pages
+npm run build:web
 
 # Deploy ไป GitHub Pages
 npm run deploy
@@ -123,16 +145,17 @@ npm run deploy
 
 ## 🌐 GitHub Pages Deployment
 
-1. ตั้งค่า `vite.config.js`:
+1. ตั้งค่า `vite.config.js` ให้ใช้ `VITE_BASE_PATH`:
 ```javascript
 export default defineConfig({
-  base: '/swlc/',
+  base: process.env.VITE_BASE_PATH || './',
   plugins: [react(), tailwindcss()],
 })
 ```
 
 2. Deploy:
 ```bash
+npm run build:web
 npm run deploy
 ```
 
